@@ -1,12 +1,13 @@
-import { create } from 'zustand';
-import { ImageSourcePropType } from 'react-native';
+import { create } from "zustand";
+// import { ImageSourcePropType } from 'react-native';
 
 type Conversation = {
   id: string;
   name: string;
   message: string;
   time: string;
-  avatar: ImageSourcePropType;
+  // avatar: ImageSourcePropType;
+  avatar: string;
 };
 
 type ConversationUIState = {
@@ -25,10 +26,13 @@ type ConversationState = {
 //   setSelectedConversation: (conv) => set({ selectedConversation: conv }),
 // }));
 
-export const useConversationStore = create<ConversationState & ConversationUIState>((set) => ({
+export const useConversationStore = create<
+  ConversationState & ConversationUIState
+>((set) => ({
   selectedConversation: undefined,
   setSelectedConversation: (conv) => set({ selectedConversation: conv }),
   showOptions: false,
   setShowOptions: (visible) => set({ showOptions: visible }),
-  toggleShowOptions: () => set((state) => ({ showOptions: !state.showOptions })),
+  toggleShowOptions: () =>
+    set((state) => ({ showOptions: !state.showOptions })),
 }));

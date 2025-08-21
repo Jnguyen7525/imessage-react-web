@@ -7,9 +7,12 @@ import { ConversationMessage } from "./components/ConversationMessage";
 import { AudioLines, Plus } from "lucide-react";
 import { conversationMessages, messagesArray } from "@/utils/messages";
 import { useConversationStore } from "@/store/useConversationStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
   const setSelectedConversation = useConversationStore(
     (state) => state.setSelectedConversation
   );
@@ -42,9 +45,17 @@ export default function Home() {
 
   const handleSelectMessage = (id: string) => {
     const selected = messagesArray.find((msg) => msg.id === id);
+    console.log("Found selected:", selected); // ✅ Should log the object
+
     setSelectedConversation(selected);
+    console.log("Selected conversation (after set):", selectedConversation);
     // router.push(`/message/${id}`);
   };
+
+  useEffect(() => {
+    console.log("Selected conversation (after set):", selectedConversation);
+  }, [selectedConversation]);
+
   return (
     <div className="font-sans ">
       <main className="flex flex-col w-full min-h-screen">
@@ -52,7 +63,7 @@ export default function Home() {
         {/* 🧱 Split layout below */}
         <div className="flex h-full flex-1 w-full">
           {/* Sidebar / Inbox */}
-          <div className="w-[350px] bg-[#09090b] text-white flex flex-col py-5 px-5 border-r border-zinc-800 gap-5">
+          <div className="w-[350px] bg-[#09090b] text-white flex flex-col py-5 px-5 border-r border-zinc-800 gap-5 h-full ovverflow-y-auto">
             {messagesArray.map((msg) => (
               <Message
                 key={msg.id}
@@ -62,33 +73,44 @@ export default function Home() {
             ))}
           </div>
           {/* Conversation Thread */}
-          <div className="flex-1 bg-[#09090b] text-white p-5">
+          <div className="flex-1 flex flex-col justify-between bg-[#09090b] text-white p-10">
             {selectedConversation ? (
               <>
-                {/* <Text className=""={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: '#fff' }}>
-                {selectedConversation.name}
-              </Text> */}
-                {conversationMessages.map((msg) => (
+                {/* <div className="">{selectedConversation.name}</div> */}
+                {/* {conversationMessages.map((msg) => (
                   <ConversationMessage key={msg.id} data={msg} />
-                ))}
+                ))} */}
+                <div className="flex flex-col gap-2">
+                  {conversationMessages.map((msg) => (
+                    <ConversationMessage key={msg.id} data={msg} />
+                  ))}
+                </div>
 
-                <div className="">
-                  <div className="">
+                <div className="flex sticky bottom-0">
+                  <div className="flex w-full items-center ">
                     {/* Audio icon (left) */}
                     <button className="">
-                      <Plus size={24} color={"#851de0"} />
+                      <Plus
+                        size={24}
+                        color={"#851de0"}
+                        className="cursor-pointer hover:opacity-50"
+                      />
                     </button>
 
                     {/* Input field (center) */}
-                    <div className="">
+                    <div className="flex items-center justify-between flex-1 mx-2 border border-zinc-800 rounded-full px-5 py-1">
                       <input
-                        className=""
+                        className="w-full rounded-full outline-none"
                         // placeholderTextColor={colors.zinc[400]}
                         placeholder="Message"
                       />
                       {/* Plus icon (right) */}
                       <button className="">
-                        <AudioLines size={24} color={"#851de0"} />
+                        <AudioLines
+                          size={24}
+                          color={"#851de0"}
+                          className="cursor-pointer hover:opacity-50"
+                        />
                       </button>
                     </div>
                   </div>

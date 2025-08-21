@@ -24,24 +24,39 @@ function Header() {
     console.log("Selected (via useMemo):", selectedConversation);
   }, [selectedConversation]);
   return (
-    <div className="bg-[#09090b] w-full h-fit p-5 gap-12 flex text-white items-center border-b border-zinc-800">
-      <div>
+    <div className="bg-[#09090b] w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800">
+      <div className="">
         {selectedConversation ? (
-          <div className="">
-            <Image className="" src={selectedConversation.avatar} alt="" />
+          <div className="flex items-center gap-2">
+            <Image
+              className="w-12 h-12 rounded-full"
+              src={selectedConversation.avatar}
+              alt=""
+            />
             <span className="">{selectedConversation.name}</span>
           </div>
         ) : (
           <span className="">Messages</span>
         )}
       </div>
-      <div className="border-2 border-[#27272a] h-fit w-fit rounded-full px-2 py-1 flex-1 mx-4">
-        <input className="" placeholder="search..." />
+      <div className="border-1 border-[#27272a] h-fit w-fit rounded-full  flex-1 mx-4">
+        <input
+          className="px-4 py-1 w-full rounded-full"
+          placeholder="Search..."
+        />
       </div>
       <div className="flex gap-4 text-[#851de0]">
-        <Phone />
-        <Video />
-        <Ellipsis />
+        <Phone
+          className={`${
+            selectedConversation ? "cursor-pointer hover:opacity-50" : "hidden"
+          }`}
+        />
+        <Video
+          className={`${
+            selectedConversation ? "cursor-pointer hover:opacity-50" : "hidden"
+          }`}
+        />
+        <Ellipsis className="cursor-pointer hover:opacity-50" />
       </div>
     </div>
   );

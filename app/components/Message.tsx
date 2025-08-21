@@ -15,16 +15,17 @@ type MessageProps = {
 
 export const Message = ({ data, onPress }: MessageProps) => {
   return (
-    <button className="flex w-full items-center gap-2">
+    <button
+      className="flex w-full items-center gap-2 cursor-pointer hover:opacity-50"
+      onClick={onPress}
+    >
       <Image src={data.avatar} className="w-12 h-12 rounded-full" alt="" />
       <div className="flex flex-col flex-1">
         <div className="flex items-center justify-between w-full">
           <span className="">{data.name}</span>
-          <span className="">{data.time}</span>
+          <span className="text-zinc-500">{data.time}</span>
         </div>
-        <p className="text-sm text-zinc-500 w-full text-left">
-          {data.message}
-        </p>
+        <p className="text-sm text-zinc-500 w-full text-left">{data.message}</p>
       </div>
     </button>
   );
