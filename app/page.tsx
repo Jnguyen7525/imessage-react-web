@@ -58,19 +58,22 @@ export default function Home() {
 
   return (
     <div className="font-sans ">
-      <main className="flex flex-col w-full min-h-screen">
+      <main className="flex flex-col w-full max-h-screen">
         <Header />
         {/* 🧱 Split layout below */}
-        <div className="flex h-full flex-1 w-full">
+        <div className="flex min-h-0 flex-1 w-full">
           {/* Sidebar / Inbox */}
-          <div className="w-[350px] bg-[#09090b] text-white flex flex-col py-5 px-5 border-r border-zinc-800 gap-5 h-full ovverflow-y-auto">
-            {messagesArray.map((msg) => (
-              <Message
-                key={msg.id}
-                data={msg}
-                onPress={() => handleSelectMessage(msg.id)}
-              />
-            ))}
+          <div className="w-[350px] bg-[#09090b] text-white flex flex-col py-5 px-5 border-r border-zinc-800 gap-5">
+            {/* Scrollable message list */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-5 gap-5 flex flex-col">
+              {messagesArray.map((msg) => (
+                <Message
+                  key={msg.id}
+                  data={msg}
+                  onPress={() => handleSelectMessage(msg.id)}
+                />
+              ))}
+            </div>
           </div>
           {/* Conversation Thread */}
           <div className="flex-1 flex flex-col justify-between bg-[#09090b] text-white p-10">
@@ -80,13 +83,13 @@ export default function Home() {
                 {/* {conversationMessages.map((msg) => (
                   <ConversationMessage key={msg.id} data={msg} />
                 ))} */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col overflow-y-auto scrollbar-hide gap-2">
                   {conversationMessages.map((msg) => (
                     <ConversationMessage key={msg.id} data={msg} />
                   ))}
                 </div>
 
-                <div className="flex sticky bottom-0">
+                <div className="flex sticky bottom-0 mt-5">
                   <div className="flex w-full items-center ">
                     {/* Audio icon (left) */}
                     <button className="">

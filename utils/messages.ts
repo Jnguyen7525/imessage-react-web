@@ -53,6 +53,55 @@ export const conversationMessages: MessageType[] = [
   { id: 18, amISender: false, text: "Nos vemos em breve então." },
   { id: 19, amISender: true, text: "Até logo!" },
   { id: 20, amISender: false, text: "Até logo!" },
+  // 2nd round
+  { id: 21, amISender: true, text: "Olá, como vai?" },
+  { id: 22, amISender: false, text: "Estou bem, obrigado! E você?" },
+  { id: 23, amISender: true, text: "Tudo bem por aqui também, obrigado!" },
+  { id: 24, amISender: false, text: "Ótimo saber!" },
+  { id: 25, amISender: true, text: "Está fazendo algo interessante hoje?" },
+  { id: 26, amISender: false, text: "Não, só relaxando em casa. E você?" },
+  {
+    id: 27,
+    amISender: true,
+    text: "Eu estou trabalhando em um projeto pessoal.",
+  },
+  {
+    id: 28,
+    amISender: false,
+    text: "Que legal! Qual projeto você está trabalhando?",
+  },
+  {
+    id: 29,
+    amISender: true,
+    text: "É um aplicativo de gerenciamento de tarefas.",
+  },
+  {
+    id: 30,
+    amISender: false,
+    text: "Interessante! Espero que seja um sucesso.",
+  },
+  {
+    id: 31,
+    amISender: true,
+    text: "Obrigado! Estou trabalhando duro para isso.",
+  },
+  { id: 32, amISender: false, text: "Eu acredito em você!" },
+  {
+    id: 33,
+    amISender: true,
+    text: "Vamos sair para tomar um café algum dia desses?",
+  },
+  { id: 34, amISender: false, text: "Claro, adoraria!" },
+  {
+    id: 35,
+    amISender: true,
+    text: "Perfeito! Vou te enviar uma mensagem para marcarmos.",
+  },
+  { id: 36, amISender: false, text: "Estou ansioso por isso!" },
+  { id: 37, amISender: true, text: "Eu também!" },
+  { id: 38, amISender: false, text: "Nos vemos em breve então." },
+  { id: 39, amISender: true, text: "Até logo!" },
+  { id: 40, amISender: false, text: "Até logo!" },
 ];
 
 export const messagesArray = [
