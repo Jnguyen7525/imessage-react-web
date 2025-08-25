@@ -241,7 +241,10 @@ export default function Home() {
 
   return (
     <div className="font-sans ">
-      <main className="flex flex-col w-full max-h-screen">
+      <main
+        className="flex flex-col w-full max-h-screen"
+        // data-lk-theme="default"
+      >
         <Header />
         {/* 🧱 Split layout below */}
         <div className="flex min-h-0 flex-1 w-full">
@@ -305,12 +308,12 @@ export default function Home() {
             ) : (
               <div className="flex-1 bg-[#09090b] text-white flex items-center justify-center h-full">
                 <p className="">Please select a conversation</p>
-                <Suspense fallback="Loading">
+                {/* <Suspense fallback="Loading">
                   <Tabs>
                     <DemoMeetingTab label="Demo" />
                     <CustomConnectionTab label="Custom" />
                   </Tabs>
-                </Suspense>
+                </Suspense> */}
               </div>
             )}
           </div>
