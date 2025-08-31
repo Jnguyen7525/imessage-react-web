@@ -12,6 +12,7 @@ import {
   randomString,
 } from "@/lib/client-utils";
 import styles from "@/styles/Home.module.css";
+import { useCallStore } from "@/store/useCallStore";
 
 function Tabs(props: React.PropsWithChildren<{}>) {
   const searchParams = useSearchParams();
@@ -189,16 +190,93 @@ function CustomConnectionTab(props: { label: string }) {
 
 function Header() {
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+  const participantName = searchParams.get("user") ?? "anonymous";
+
+  const setOutgoingCall = useCallStore((state) => state.setOutgoingCall);
+  const clearOutgoingCall = useCallStore((state) => state.clearOutgoingCall);
+
   const [e2ee, setE2ee] = useState(false);
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
-  const startMeeting = () => {
-    if (e2ee) {
-      router.push(
-        `/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`
-      );
-    } else {
-      router.push(`/rooms/${generateRoomId()}`);
-    }
+
+  // const startMeeting = () => {
+  //   if (e2ee) {
+  //     router.push(
+  //       `/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`
+  //     );
+  //   } else {
+  //     router.push(`/rooms/${generateRoomId()}`);
+  //   }
+  // };
+  // !first try with custom folder
+  // const startMeeting = async () => {
+  //   const roomName = generateRoomId();
+
+  //   const res = await fetch(
+  //     `/api/connection-details?roomName=${roomName}&participantName=${participantName}`
+  //   );
+  //   const data = await res.json();
+
+  //   // Send call invite to other user (via localStorage for now)
+  //   localStorage.setItem(
+  //     "incomingCall",
+  //     JSON.stringify({
+  //       roomName,
+  //       caller: participantName,
+  //       liveKitUrl: data.serverUrl,
+  //       // token: data.participantToken,
+  //     })
+  //   );
+
+  //   router.push(
+  //     `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${roomName}`
+  //   );
+  // };
+  // !second try now with callinguioverlay
+  const startMeeting = async () => {
+    if (!selectedConversation) return;
+
+    const roomName = generateRoomId();
+
+    const res = await fetch(
+      `/api/connection-details?roomName=${roomName}&participantName=${participantName}`
+    );
+    const data = await res.json();
+
+    // Simulate signaling via localStorage
+    localStorage.setItem(
+      "incomingCall",
+      JSON.stringify({
+        roomName,
+        caller: participantName,
+        liveKitUrl: data.serverUrl,
+        callerAvatar: selectedConversation.avatar, // 👈 Include avatar
+      })
+    );
+
+    // Show "Calling..." UI
+    // setOutgoingCall({
+    //   calleeName: selectedConversation.name,
+    //   calleeAvatar: selectedConversation.avatar,
+    // });
+    setOutgoingCall({
+      calleeName: selectedConversation.name,
+      calleeAvatar: selectedConversation.avatar,
+      roomName,
+      liveKitUrl: data.serverUrl,
+      callerToken: data.participantToken, // 👈 store caller’s token
+    });
+
+    // Optional: clear after 30 seconds
+    setTimeout(() => {
+      clearOutgoingCall();
+    }, 30000);
+
+    // !took this out because it was causing us to immediately join the room after clicking the call button. we want to wait until the callee accepts first
+    // router.push(
+    //   `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${roomName}`
+    // );
   };
 
   const toggleShowOptions = useConversationStore(

@@ -18,6 +18,9 @@ import {
   randomString,
 } from "@/lib/client-utils";
 import styles from "../styles/Home.module.css";
+import { useCallStore } from "@/store/useCallStore";
+import { IncomingCallPopup } from "./components/IncomingCall";
+import { OutgoingCallStatus } from "./components/OutgoingCall";
 
 function Tabs(props: React.PropsWithChildren<{}>) {
   const searchParams = useSearchParams();
@@ -193,8 +196,57 @@ function CustomConnectionTab(props: { label: string }) {
   );
 }
 
+function CallUIOverlay() {
+  const incomingCall = useCallStore((s) => s.incomingCall);
+  const outgoingCall = useCallStore((s) => s.outgoingCall);
+  const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const participantName = searchParams.get("user") ?? "anonymous";
+
+  if (incomingCall) {
+    return (
+      <IncomingCallPopup
+        callerName={incomingCall.callerName}
+        callerAvatar={incomingCall.callerAvatar}
+        onAccept={async () => {
+          const res = await fetch(
+            `/api/connection-details?roomName=${incomingCall.roomName}&participantName=${participantName}`
+          );
+          const data = await res.json();
+          // Notify caller that callee accepted
+          localStorage.setItem("callAccepted", incomingCall.roomName);
+
+          router.push(
+            `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}`
+          );
+          clearIncomingCall();
+        }}
+        onReject={() => {
+          clearIncomingCall();
+        }}
+      />
+    );
+  }
+
+  if (outgoingCall) {
+    return (
+      <OutgoingCallStatus
+        calleeName={outgoingCall.calleeName}
+        calleeAvatar={outgoingCall.calleeAvatar}
+      />
+    );
+  }
+
+  return null;
+}
+
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const participantName = searchParams.get("user") ?? "anonymous";
+  const setIncomingCall = useCallStore((s) => s.setIncomingCall);
+  const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
 
   const setSelectedConversation = useConversationStore(
     (state) => state.setSelectedConversation
@@ -239,6 +291,86 @@ export default function Home() {
     console.log("Selected conversation (after set):", selectedConversation);
   }, [selectedConversation]);
 
+  // useEffect(() => {
+  //   const checkIncomingCall = async () => {
+  //     const callData = localStorage.getItem("incomingCall");
+  //     if (callData) {
+  //       const { roomName, caller, liveKitUrl } = JSON.parse(callData);
+  //       const accept = confirm(`${caller} is calling you. Accept?`);
+
+  //       if (accept) {
+  //         // Fetch a new token for the current user (callee)
+  //         const res = await fetch(
+  //           `/api/connection-details?roomName=${roomName}&participantName=${participantName}`
+  //         );
+  //         const data = await res.json();
+
+  //         router.push(
+  //           `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${roomName}`
+  //         );
+  //       }
+
+  //       localStorage.removeItem("incomingCall");
+  //     }
+  //   };
+
+  //   window.addEventListener("focus", checkIncomingCall);
+  //   return () => window.removeEventListener("focus", checkIncomingCall);
+  // }, [participantName, router, searchParams]);
+
+  // this is for listening for incoming calls to accept joining a room on the callee side
+  useEffect(() => {
+    const checkIncomingCall = () => {
+      const callData = localStorage.getItem("incomingCall");
+      if (callData) {
+        const { roomName, caller, liveKitUrl, callerAvatar } =
+          JSON.parse(callData);
+
+        setIncomingCall({
+          callerName: caller,
+          callerAvatar,
+          roomName,
+          liveKitUrl,
+        });
+
+        // Optional: play ringtone
+        const audio = new Audio("/ringtone.mp3");
+        audio.loop = true;
+        audio.play();
+
+        // Timeout after 30 seconds
+        setTimeout(() => {
+          clearIncomingCall();
+          audio.pause();
+        }, 30000);
+
+        localStorage.removeItem("incomingCall");
+      }
+    };
+
+    window.addEventListener("focus", checkIncomingCall);
+    return () => window.removeEventListener("focus", checkIncomingCall);
+  }, [participantName, setIncomingCall, clearIncomingCall, router]);
+
+  // this is listening for when callee accepts the outgoing call to joing the room on the caller side
+  useEffect(() => {
+    const checkCallAccepted = () => {
+      const acceptedRoom = localStorage.getItem("callAccepted");
+      const outgoingCall = useCallStore.getState().outgoingCall;
+
+      if (acceptedRoom && outgoingCall?.roomName === acceptedRoom) {
+        router.push(
+          `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${outgoingCall.callerToken}&roomName=${outgoingCall.roomName}`
+        );
+        useCallStore.getState().clearOutgoingCall();
+        localStorage.removeItem("callAccepted");
+      }
+    };
+
+    window.addEventListener("focus", checkCallAccepted);
+    return () => window.removeEventListener("focus", checkCallAccepted);
+  }, [router]);
+
   return (
     <div className="font-sans ">
       <main
@@ -246,6 +378,7 @@ export default function Home() {
         // data-lk-theme="default"
       >
         <Header />
+        <CallUIOverlay /> {/* 👈 Add this here */}
         {/* 🧱 Split layout below */}
         <div className="flex min-h-0 flex-1 w-full">
           {/* Sidebar / Inbox */}
