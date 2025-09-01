@@ -20,11 +20,15 @@ import { KeyboardShortcuts } from "@/lib/KeyboardShortcuts";
 import { SettingsMenu } from "@/lib/SettingsMenu";
 import { useSetupE2EE } from "@/lib/useSetupE2EE";
 import { useLowCPUOptimizer } from "@/lib/usePerfomanceOptimiser";
+import SidebarCallerPanel from "../components/SidebarCallerPanel";
+import { CustomVideoConference } from "../components/CustomVideoConference";
 
 export function VideoConferenceClientImpl(props: {
   liveKitUrl: string;
   token: string;
   codec: VideoCodec | undefined;
+  // !added this for sidebar caller panel
+  participantName: string; // ✅ Add this
 }) {
   const keyProvider = new ExternalE2EEKeyProvider();
   const { worker, e2eePassphrase } = useSetupE2EE();
@@ -101,7 +105,18 @@ export function VideoConferenceClientImpl(props: {
     <div className="lk-room-container">
       <RoomContext.Provider value={room}>
         <KeyboardShortcuts />
-        <VideoConference
+        {/* 👇 Sidebar with contacts */}
+        {/* <SidebarCallerPanel participantName={props.participantName} /> */}
+
+        {/* <VideoConference
+          chatMessageFormatter={formatChatMessageLinks}
+          SettingsComponent={
+            process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU === "true"
+              ? SettingsMenu
+              : undefined
+          }
+        /> */}
+        <CustomVideoConference
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={
             process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU === "true"

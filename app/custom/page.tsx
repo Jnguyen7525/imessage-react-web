@@ -1,15 +1,19 @@
 import { videoCodecs } from "livekit-client";
 import { VideoConferenceClientImpl } from "./VideoConferenceClientImpl";
 import { isVideoCodec } from "@/lib/types";
+import { CustomVideoConference } from "../components/CustomVideoConference";
 
 export default async function CustomRoomConnection(props: {
   searchParams: Promise<{
     liveKitUrl?: string;
     token?: string;
     codec?: string;
+    // !added this for sidebar caller panel
+    participantName: string; // ✅ Add this
   }>;
 }) {
-  const { liveKitUrl, token, codec } = await props.searchParams;
+  const { liveKitUrl, token, codec, participantName } =
+    await props.searchParams;
   if (typeof liveKitUrl !== "string") {
     return <h2>Missing LiveKit URL</h2>;
   }
@@ -23,6 +27,8 @@ export default async function CustomRoomConnection(props: {
       </h2>
     );
   }
+  const name =
+    typeof participantName === "string" ? participantName : "anonymous";
 
   return (
     <main data-lk-theme="default" style={{ height: "100%" }}>
@@ -30,7 +36,14 @@ export default async function CustomRoomConnection(props: {
         liveKitUrl={liveKitUrl}
         token={token}
         codec={codec}
+        participantName={name} // ✅ Pass it here
       />
+      {/* <CustomVideoConference
+        liveKitUrl={liveKitUrl}
+        token={token}
+        codec={codec}
+        participantName={name} // ✅ Pass it here
+      /> */}
     </main>
   );
 }

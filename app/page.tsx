@@ -223,6 +223,8 @@ function CallUIOverlay() {
           clearIncomingCall();
         }}
         onReject={() => {
+          localStorage.setItem("callDeclined", incomingCall.roomName); // 👈 signal rejection
+
           clearIncomingCall();
         }}
       />
@@ -370,6 +372,23 @@ export default function Home() {
     window.addEventListener("focus", checkCallAccepted);
     return () => window.removeEventListener("focus", checkCallAccepted);
   }, [router]);
+
+  // !this is for listening for when the outgoing call is rejected or was not accepted by the callee
+  useEffect(() => {
+    const checkCallDeclined = () => {
+      const declinedRoom = localStorage.getItem("callDeclined");
+      const outgoingCall = useCallStore.getState().outgoingCall;
+
+      if (declinedRoom && outgoingCall?.roomName === declinedRoom) {
+        alert(`${outgoingCall.calleeName} declined the call`);
+        useCallStore.getState().clearOutgoingCall();
+        localStorage.removeItem("callDeclined");
+      }
+    };
+
+    window.addEventListener("focus", checkCallDeclined);
+    return () => window.removeEventListener("focus", checkCallDeclined);
+  }, []);
 
   return (
     <div className="font-sans ">

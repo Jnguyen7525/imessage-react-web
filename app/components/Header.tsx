@@ -269,8 +269,18 @@ function Header() {
     });
 
     // Optional: clear after 30 seconds
+    // setTimeout(() => {
+    //   clearOutgoingCall();
+    // }, 30000);
+    // ⏱️ Timeout after 30 seconds if unanswered
     setTimeout(() => {
-      clearOutgoingCall();
+      const currentCall = useCallStore.getState().outgoingCall;
+      const acceptedRoom = localStorage.getItem("callAccepted");
+
+      if (currentCall?.roomName === roomName && acceptedRoom !== roomName) {
+        alert("Call timed out — no response");
+        useCallStore.getState().clearOutgoingCall();
+      }
     }, 30000);
 
     // !took this out because it was causing us to immediately join the room after clicking the call button. we want to wait until the callee accepts first
