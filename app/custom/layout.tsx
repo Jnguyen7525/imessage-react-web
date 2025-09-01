@@ -60,15 +60,8 @@ export default function CustomLayout({
   children: React.ReactNode;
 }) {
   return (
-    // <html lang="en">
-    //   <body data-lk-theme="default">
-    //     <Toaster />
-    //     {/* <div>hello</div> */}
-    //     {children}
-    //   </body>
-    // </html>
     <>
-      <Toaster />
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       {children}
     </>
   );

@@ -29,6 +29,7 @@
 // import { ControlBar } from "./ControlBar";
 // import { useWarnAboutMissingStyles } from "../hooks/useWarnAboutMissingStyles";
 
+import { useCallStore } from "@/store/useCallStore";
 import { messagesArray } from "@/utils/messages";
 import {
   isEqualTrackRef,
@@ -59,9 +60,11 @@ import {
   WidgetState,
 } from "@livekit/components-react";
 import { RoomEvent, Track } from "livekit-client";
-import { EllipsisVertical, Phone, UserMinus, UserMinus2 } from "lucide-react";
+import { EllipsisVertical, Phone, UserMinus2 } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import React from "react";
+import toast from "react-hot-toast";
 
 /**
  * @public
@@ -109,6 +112,10 @@ export function CustomVideoConference({
   const room = useRoomContext();
 
   const participants = useParticipants();
+  const roomName = room.name;
+  const searchParams = useSearchParams();
+  const liveKitUrl = searchParams.get("liveKitUrl");
+  const participantName = searchParams.get("user") ?? "anonymous";
 
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
@@ -194,20 +201,50 @@ export function CustomVideoConference({
     tracks,
   ]);
 
-  const handleRemoveParticipant = (identity: string) => {
-    console.log(`Request to remove participant: ${identity}`);
-    // You could trigger a server-side API call here if you're an admin
+  //   const handleRemoveParticipant = (identity: string) => {
+  //     console.log(`Request to remove participant: ${identity}`);
+  //     // You could trigger a server-side API call here if you're an admin
+  //   };
+  const handleRemoveParticipant = async (identity: string) => {
+    const roomName = room.name; // or get from URL/query param
+
+    try {
+      const res = await fetch("/api/kick-participant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomName, participantIdentity: identity }),
+      });
+
+      const result = await res.json();
+      //   if (result.success) {
+      //     console.log(`Successfully removed ${identity}`);
+      //   } else {
+      //     console.error("Failed to remove participant:", result.error);
+      //   }
+      // } catch (err) {
+      //   console.error("Error removing participant:", err);
+      // }
+      if (result.success) {
+        toast.success(`Removed ${identity} from the room`);
+      } else {
+        toast.error("Failed to remove participant");
+      }
+    } catch (err) {
+      toast.error("Error removing participant");
+    }
   };
-  const getAvatarForParticipant = (identity: string) => {
-    const match = messagesArray.find((msg) => msg.id === identity);
-    return match?.avatar ?? null;
-  };
-  const getAvatarByName = (nameOrId: string): string | null => {
-    const match = messagesArray.find(
-      (msg) => msg.name === nameOrId || msg.id === nameOrId
-    );
-    return match?.avatar ?? null;
-  };
+
+  React.useEffect(() => {
+    const onDisconnect = () => {
+      toast("You’ve been removed from the room", { icon: "🚫" });
+    };
+
+    room.on(RoomEvent.Disconnected, onDisconnect);
+
+    return () => {
+      room.off(RoomEvent.Disconnected, onDisconnect);
+    };
+  }, [room]);
 
   //   useWarnAboutMissingStyles();
 
@@ -282,33 +319,6 @@ export function CustomVideoConference({
           <div className="lk-video-conference-inner flex">
             <div className="flex-1 flex overflow-hidden">
               {/* 🟣 Sidebar */}
-              {/* <div
-                className={`flex-shrink-0 transition-all duration-300 bg-[#09090b] text-white shadow-lg overflow-y-auto ${
-                  sidebarOpen ? "w-fit p-4" : "w-0 p-0"
-                }`}
-              >
-                <h2 className="text-lg font-semibold mb-4">Contacts</h2>
-                <ul className="space-y-3">
-                  {messagesArray.map((msg) => (
-                    <li
-                      key={msg.id}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Image
-                          src={msg.avatar}
-                          alt=""
-                          className="w-8 h-8 rounded-full"
-                        />
-                        <span>{msg.name}</span>
-                      </div>
-                      <button className="text-[#851de0] hover:opacity-70 cursor-pointer">
-                        <Phone size={22} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div> */}
               <div
                 className={`flex-shrink-0 transition-all duration-300 bg-[#09090b] text-white shadow-lg overflow-y-auto ${
                   sidebarOpen ? "w-[300px] p-4" : "w-0 p-0"
@@ -339,14 +349,6 @@ export function CustomVideoConference({
                           key={msg.id}
                           className="flex items-center justify-between gap-2"
                         >
-                          {/* <div className="flex items-center gap-2">
-                            <Image
-                              src={msg.avatar}
-                              alt=""
-                              className="w-8 h-8 rounded-full"
-                            />
-                            <span>{msg.name}</span>
-                          </div> */}
                           <div className="flex items-center gap-2">
                             {msg.avatar ? (
                               <Image
@@ -362,7 +364,33 @@ export function CustomVideoConference({
                             <span>{msg.name}</span>
                           </div>
 
-                          <button className="text-[#851de0] hover:opacity-70 cursor-pointer">
+                          <button
+                            className="text-[#851de0] hover:opacity-70 cursor-pointer"
+                            onClick={async () => {
+                              const res = await fetch(
+                                `/api/connection-details?roomName=${roomName}&participantName=${msg.name}`
+                              );
+                              const data = await res.json();
+
+                              localStorage.setItem(
+                                `incomingCall-${msg.name}`,
+                                JSON.stringify({
+                                  roomName,
+                                  caller: participantName,
+                                  liveKitUrl: data.serverUrl,
+                                  callerAvatar: msg.avatar,
+                                })
+                              );
+
+                              useCallStore.getState().setOutgoingCall({
+                                calleeName: msg.name,
+                                calleeAvatar: msg.avatar,
+                                roomName,
+                                liveKitUrl: data.serverUrl,
+                                callerToken: data.participantToken,
+                              });
+                            }}
+                          >
                             <Phone size={22} />
                           </button>
                         </li>
