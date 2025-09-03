@@ -13,6 +13,7 @@ import {
 } from "@/lib/client-utils";
 import styles from "@/styles/Home.module.css";
 import { useCallStore } from "@/store/useCallStore";
+import { messagesArray } from "@/utils/messages";
 
 function Header() {
   const router = useRouter();
@@ -35,33 +36,15 @@ function Header() {
   //     router.push(`/rooms/${generateRoomId()}`);
   //   }
   // };
-  // !first try with custom folder
-  // const startMeeting = async () => {
-  //   const roomName = generateRoomId();
 
-  //   const res = await fetch(
-  //     `/api/connection-details?roomName=${roomName}&participantName=${participantName}`
-  //   );
-  //   const data = await res.json();
-
-  //   // Send call invite to other user (via localStorage for now)
-  //   localStorage.setItem(
-  //     "incomingCall",
-  //     JSON.stringify({
-  //       roomName,
-  //       caller: participantName,
-  //       liveKitUrl: data.serverUrl,
-  //       // token: data.participantToken,
-  //     })
-  //   );
-
-  //   router.push(
-  //     `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${roomName}`
-  //   );
-  // };
   // !second try now with callinguioverlay
   const startMeeting = async () => {
     if (!selectedConversation) return;
+
+    const callerInfo = messagesArray.find(
+      (msg) => msg.name === participantName
+    );
+    const callerAvatar = callerInfo?.avatar ?? "";
 
     const roomName = generateRoomId();
 
@@ -71,42 +54,27 @@ function Header() {
     const data = await res.json();
 
     // Simulate signaling via localStorage
-    // localStorage.setItem(
-    //   "incomingCall",
-    //   JSON.stringify({
-    //     roomName,
-    //     caller: participantName,
-    //     liveKitUrl: data.serverUrl,
-    //     callerAvatar: selectedConversation.avatar, // 👈 Include avatar
-    //   })
-    // );
     localStorage.setItem(
       `incomingCall-${selectedConversation.name}`,
       JSON.stringify({
         roomName,
         caller: participantName,
         liveKitUrl: data.serverUrl,
-        callerAvatar: selectedConversation.avatar,
+        callerAvatar, // ✅ Now using the correct avatar
       })
     );
 
     // Show "Calling..." UI
-    // setOutgoingCall({
-    //   calleeName: selectedConversation.name,
-    //   calleeAvatar: selectedConversation.avatar,
-    // });
     setOutgoingCall({
       calleeName: selectedConversation.name,
       calleeAvatar: selectedConversation.avatar,
       roomName,
       liveKitUrl: data.serverUrl,
-      callerToken: data.participantToken, // 👈 store caller’s token
+      callerToken: data.participantToken,
+      callerName: participantName, // ✅ Add this line
     });
 
     // Optional: clear after 30 seconds
-    // setTimeout(() => {
-    //   clearOutgoingCall();
-    // }, 30000);
     // ⏱️ Timeout after 30 seconds if unanswered
     setTimeout(() => {
       const currentCall = useCallStore.getState().outgoingCall;

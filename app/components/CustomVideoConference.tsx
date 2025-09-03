@@ -201,10 +201,6 @@ export function CustomVideoConference({
     tracks,
   ]);
 
-  //   const handleRemoveParticipant = (identity: string) => {
-  //     console.log(`Request to remove participant: ${identity}`);
-  //     // You could trigger a server-side API call here if you're an admin
-  //   };
   const handleRemoveParticipant = async (identity: string) => {
     const roomName = room.name; // or get from URL/query param
 
@@ -216,14 +212,7 @@ export function CustomVideoConference({
       });
 
       const result = await res.json();
-      //   if (result.success) {
-      //     console.log(`Successfully removed ${identity}`);
-      //   } else {
-      //     console.error("Failed to remove participant:", result.error);
-      //   }
-      // } catch (err) {
-      //   console.error("Error removing participant:", err);
-      // }
+
       if (result.success) {
         toast.success(`Removed ${identity} from the room`);
       } else {
@@ -246,70 +235,15 @@ export function CustomVideoConference({
     };
   }, [room]);
 
+  React.useEffect(() => {
+    return () => {
+      useCallStore.getState().clearOutgoingCall();
+    };
+  }, []);
+
   //   useWarnAboutMissingStyles();
 
   return (
-    // <div className="lk-video-conference" {...props}>
-    //   {isWeb() && (
-    //     <LayoutContextProvider
-    //       value={layoutContext}
-    //       // onPinChange={handleFocusStateChange}
-    //       onWidgetChange={widgetUpdate}
-    //     >
-    //       <div className="lk-video-conference-inner">
-    //         {!focusTrack ? (
-    //           <div className="lk-grid-layout-wrapper">
-    //             <GridLayout tracks={tracks}>
-    //               <ParticipantTile />
-    //             </GridLayout>
-    //           </div>
-    //         ) : (
-    //           <div className="lk-focus-layout-wrapper">
-    //             <FocusLayoutContainer>
-    //               <CarouselLayout tracks={carouselTracks}>
-    //                 <ParticipantTile />
-    //               </CarouselLayout>
-    //               {focusTrack && <FocusLayout trackRef={focusTrack} />}
-    //             </FocusLayoutContainer>
-    //           </div>
-    //         )}
-    //         {/* <ControlBar
-    //           controls={{ chat: true, settings: !!SettingsComponent }}
-    //         /> */}
-    //         <div className="flex items-center justify-center">
-    //           {/* 👈 Inject custom button on the left side */}
-    //           <button
-    //             className="bg-zinc-800 text-white h-[44px] px-3 hover:bg-zinc-700 rounded-lg cursor-pointer"
-    //             onClick={toggleSidebar}
-    //           >
-    //             {sidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
-    //           </button>
-
-    //           <ControlBar
-    //             controls={{ chat: true, settings: !!SettingsComponent }}
-    //           />
-    //         </div>
-    //       </div>
-    //       <Chat
-    //         style={{ display: widgetState.showChat ? "grid" : "none" }}
-    //         messageFormatter={chatMessageFormatter}
-    //         messageEncoder={chatMessageEncoder}
-    //         messageDecoder={chatMessageDecoder}
-    //       />
-    //       {SettingsComponent && (
-    //         <div
-    //           className="lk-settings-menu-modal"
-    //           style={{ display: widgetState.showSettings ? "block" : "none" }}
-    //         >
-    //           <SettingsComponent />
-    //         </div>
-    //       )}
-    //     </LayoutContextProvider>
-    //   )}
-    //   <RoomAudioRenderer />
-    //   <ConnectionStateToast />
-    // </div>
-
     <div className="lk-video-conference " {...props}>
       {isWeb() && (
         <LayoutContextProvider
@@ -372,13 +306,27 @@ export function CustomVideoConference({
                               );
                               const data = await res.json();
 
+                              const callerInfo = messagesArray.find(
+                                (m) => m.name === participantName
+                              );
+                              const callerAvatar = callerInfo?.avatar ?? "";
+
+                              if (
+                                !participantName ||
+                                participantName === "anonymous"
+                              ) {
+                                console.warn(
+                                  "Caller name is missing or defaulted to anonymous"
+                                );
+                              }
+
                               localStorage.setItem(
                                 `incomingCall-${msg.name}`,
                                 JSON.stringify({
                                   roomName,
                                   caller: participantName,
                                   liveKitUrl: data.serverUrl,
-                                  callerAvatar: msg.avatar,
+                                  callerAvatar, // ✅ now using the correct avatar
                                 })
                               );
 
@@ -388,6 +336,7 @@ export function CustomVideoConference({
                                 roomName,
                                 liveKitUrl: data.serverUrl,
                                 callerToken: data.participantToken,
+                                callerName: participantName, // 👈 add this
                               });
                             }}
                           >

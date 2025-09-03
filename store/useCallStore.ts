@@ -8,16 +8,14 @@ type CallState = {
     roomName: string;
     liveKitUrl: string;
   };
-  //   outgoingCall: null | {
-  //     calleeName: string;
-  //     calleeAvatar: string;
-  //   };
+
   outgoingCall: null | {
     calleeName: string;
     calleeAvatar: string;
     roomName: string;
     liveKitUrl: string;
     callerToken: string;
+    callerName: string; // ✅ Add this line
   };
 
   setIncomingCall: (data: CallState["incomingCall"]) => void;

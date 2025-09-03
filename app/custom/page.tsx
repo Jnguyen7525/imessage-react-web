@@ -1,7 +1,6 @@
 import { videoCodecs } from "livekit-client";
 import { VideoConferenceClientImpl } from "./VideoConferenceClientImpl";
 import { isVideoCodec } from "@/lib/types";
-import { CustomVideoConference } from "../components/CustomVideoConference";
 
 export default async function CustomRoomConnection(props: {
   searchParams: Promise<{
@@ -38,12 +37,6 @@ export default async function CustomRoomConnection(props: {
         codec={codec}
         participantName={name} // ✅ Pass it here
       />
-      {/* <CustomVideoConference
-        liveKitUrl={liveKitUrl}
-        token={token}
-        codec={codec}
-        participantName={name} // ✅ Pass it here
-      /> */}
     </main>
   );
 }

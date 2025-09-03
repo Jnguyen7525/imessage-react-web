@@ -61,7 +61,7 @@ export default function CustomLayout({
 }) {
   return (
     <>
-      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
       {children}
     </>
   );
