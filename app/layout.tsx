@@ -42,6 +42,7 @@ import "@livekit/components-styles";
 import "@livekit/components-styles/prefabs";
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
+import CallUIOverlay from "./components/CallUIOverlay";
 
 export const metadata: Metadata = {
   title: {
@@ -98,8 +99,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {/* <body data-lk-theme="default"> */}
       <body data-lk-theme="default">
-        <Toaster />
+        {/* <Toaster /> */}
+        <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
+        <CallUIOverlay />
         {children}
       </body>
     </html>

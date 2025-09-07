@@ -13,56 +13,57 @@ import React, { useEffect, useState } from "react";
 import { useCallStore } from "@/store/useCallStore";
 import { IncomingCallPopup } from "./components/IncomingCall";
 import { OutgoingCallStatus } from "./components/OutgoingCall";
+import CallUIOverlay from "./components/CallUIOverlay";
 
-function CallUIOverlay() {
-  const incomingCall = useCallStore((s) => s.incomingCall);
-  const outgoingCall = useCallStore((s) => s.outgoingCall);
-  const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const participantName = searchParams.get("user") ?? "anonymous";
+// function CallUIOverlay() {
+//   const incomingCall = useCallStore((s) => s.incomingCall);
+//   const outgoingCall = useCallStore((s) => s.outgoingCall);
+//   const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
+//   const router = useRouter();
+//   const searchParams = useSearchParams();
+//   const participantName = searchParams.get("user") ?? "anonymous";
 
-  if (incomingCall) {
-    return (
-      <IncomingCallPopup
-        callerName={incomingCall.callerName}
-        callerAvatar={incomingCall.callerAvatar}
-        onAccept={async () => {
-          const res = await fetch(
-            `/api/connection-details?roomName=${incomingCall.roomName}&participantName=${participantName}`
-          );
-          const data = await res.json();
-          // Notify caller that callee accepted
-          localStorage.setItem("callAccepted", incomingCall.roomName);
+//   if (incomingCall) {
+//     return (
+//       <IncomingCallPopup
+//         callerName={incomingCall.callerName}
+//         callerAvatar={incomingCall.callerAvatar}
+//         onAccept={async () => {
+//           const res = await fetch(
+//             `/api/connection-details?roomName=${incomingCall.roomName}&participantName=${participantName}`
+//           );
+//           const data = await res.json();
+//           // Notify caller that callee accepted
+//           localStorage.setItem("callAccepted", incomingCall.roomName);
 
-          // router.push(
-          //   `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}`
-          // );
-          router.push(
-            `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}&user=${participantName}`
-          );
-          clearIncomingCall();
-        }}
-        onReject={() => {
-          localStorage.setItem("callDeclined", incomingCall.roomName); // 👈 signal rejection
+//           // router.push(
+//           //   `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}`
+//           // );
+//           router.push(
+//             `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}&user=${participantName}`
+//           );
+//           clearIncomingCall();
+//         }}
+//         onReject={() => {
+//           localStorage.setItem("callDeclined", incomingCall.roomName); // 👈 signal rejection
 
-          clearIncomingCall();
-        }}
-      />
-    );
-  }
+//           clearIncomingCall();
+//         }}
+//       />
+//     );
+//   }
 
-  if (outgoingCall) {
-    return (
-      <OutgoingCallStatus
-        calleeName={outgoingCall.calleeName}
-        calleeAvatar={outgoingCall.calleeAvatar}
-      />
-    );
-  }
+//   if (outgoingCall) {
+//     return (
+//       <OutgoingCallStatus
+//         calleeName={outgoingCall.calleeName}
+//         calleeAvatar={outgoingCall.calleeAvatar}
+//       />
+//     );
+//   }
 
-  return null;
-}
+//   return null;
+// }
 
 export default function Home() {
   const router = useRouter();
@@ -215,7 +216,7 @@ export default function Home() {
         // data-lk-theme="default"
       >
         <Header />
-        <CallUIOverlay /> {/* 👈 Add this here */}
+        {/* <CallUIOverlay />  */}
         {/* 🧱 Split layout below */}
         <div className="flex min-h-0 flex-1 w-full">
           {/* Sidebar / Inbox */}
