@@ -112,102 +112,104 @@ export default function Home() {
   }, [selectedConversation]);
 
   //! this is for listening for incoming calls to accept joining a room on the callee side
-  useEffect(() => {
-    const checkIncomingCall = () => {
-      // const callData = localStorage.getItem("incomingCall");
-      const callData = localStorage.getItem(`incomingCall-${participantName}`);
-      if (callData) {
-        const { roomName, caller, liveKitUrl, callerAvatar } =
-          JSON.parse(callData);
+  // useEffect(() => {
+  //   const checkIncomingCall = () => {
+  //     // const callData = localStorage.getItem("incomingCall");
+  //     const callData = localStorage.getItem(`incomingCall-${participantName}`);
+  //     if (callData) {
+  //       const { roomName, caller, liveKitUrl, callerAvatar } =
+  //         JSON.parse(callData);
 
-        setIncomingCall({
-          callerName: caller,
-          callerAvatar,
-          roomName,
-          liveKitUrl,
-        });
+  //       setIncomingCall({
+  //         callerName: caller,
+  //         callerAvatar,
+  //         roomName,
+  //         liveKitUrl,
+  //       });
 
-        // Optional: play ringtone
-        const audio = new Audio("/ringtone.mp3");
-        audio.loop = true;
-        audio.play();
+  //       // Optional: play ringtone
+  //       const audio = new Audio("/ringtone.mp3");
+  //       audio.loop = true;
+  //       audio.play();
 
-        // Timeout after 30 seconds
-        setTimeout(() => {
-          clearIncomingCall();
-          audio.pause();
-        }, 30000);
+  //       // Timeout after 30 seconds
+  //       setTimeout(() => {
+  //         clearIncomingCall();
+  //         audio.pause();
+  //       }, 30000);
 
-        // localStorage.removeItem("incomingCall");
-        localStorage.removeItem(`incomingCall-${participantName}`);
-      }
-    };
+  //       // localStorage.removeItem("incomingCall");
+  //       localStorage.removeItem(`incomingCall-${participantName}`);
+  //     }
+  //   };
 
-    window.addEventListener("focus", checkIncomingCall);
-    return () => window.removeEventListener("focus", checkIncomingCall);
-  }, [participantName, setIncomingCall, clearIncomingCall, router]);
+  //   window.addEventListener("focus", checkIncomingCall);
+  //   return () => window.removeEventListener("focus", checkIncomingCall);
+  // }, [participantName, setIncomingCall, clearIncomingCall, router]);
 
   //! this is listening for when callee accepts the outgoing call to joing the room on the caller side
-  useEffect(() => {
-    const checkCallAccepted = () => {
-      const acceptedRoom = localStorage.getItem("callAccepted");
-      const outgoingCall = useCallStore.getState().outgoingCall;
+  // useEffect(() => {
+  //   const checkCallAccepted = () => {
+  //     const acceptedRoom = localStorage.getItem("callAccepted");
+  //     const outgoingCall = useCallStore.getState().outgoingCall;
 
-      if (acceptedRoom && outgoingCall?.roomName === acceptedRoom) {
-        // router.push(
-        //   `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${outgoingCall.callerToken}&roomName=${outgoingCall.roomName}`
-        // );
-        router.push(
-          `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${outgoingCall.callerToken}&roomName=${outgoingCall.roomName}&user=${outgoingCall.callerName}`
-        );
+  //     if (acceptedRoom && outgoingCall?.roomName === acceptedRoom) {
+  //       // router.push(
+  //       //   `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${outgoingCall.callerToken}&roomName=${outgoingCall.roomName}`
+  //       // );
+  //       router.push(
+  //         `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${outgoingCall.callerToken}&roomName=${outgoingCall.roomName}&user=${outgoingCall.callerName}`
+  //       );
 
-        useCallStore.getState().clearOutgoingCall();
-        localStorage.removeItem("callAccepted");
-      }
-    };
+  //       useCallStore.getState().clearOutgoingCall();
+  //       localStorage.removeItem("callAccepted");
+  //     }
+  //   };
 
-    window.addEventListener("focus", checkCallAccepted);
-    return () => window.removeEventListener("focus", checkCallAccepted);
-  }, [router]);
+  //   window.addEventListener("focus", checkCallAccepted);
+  //   return () => window.removeEventListener("focus", checkCallAccepted);
+  // }, [router]);
 
   // !this is for listening for when the outgoing call is rejected or was not accepted by the callee
-  useEffect(() => {
-    const checkCallDeclined = () => {
-      const declinedRoom = localStorage.getItem("callDeclined");
-      const outgoingCall = useCallStore.getState().outgoingCall;
+  // useEffect(() => {
+  //   const checkCallDeclined = () => {
+  //     const declinedRoom = localStorage.getItem("callDeclined");
+  //     const outgoingCall = useCallStore.getState().outgoingCall;
 
-      if (declinedRoom && outgoingCall?.roomName === declinedRoom) {
-        // alert(`${outgoingCall.calleeName} declined the call`);
-        useCallStore.getState().clearOutgoingCall();
-        localStorage.removeItem("callDeclined");
-      }
-    };
+  //     if (declinedRoom && outgoingCall?.roomName === declinedRoom) {
+  //       // alert(`${outgoingCall.calleeName} declined the call`);
+  //       useCallStore.getState().clearOutgoingCall();
+  //       localStorage.removeItem("callDeclined");
+  //     }
+  //   };
 
-    window.addEventListener("focus", checkCallDeclined);
-    return () => window.removeEventListener("focus", checkCallDeclined);
-  }, []);
+  //   window.addEventListener("focus", checkCallDeclined);
+  //   return () => window.removeEventListener("focus", checkCallDeclined);
+  // }, []);
+
   // ! this is for when caller manually cancels the call
-  useEffect(() => {
-    const checkManualCancel = () => {
-      const outgoingCall = useCallStore.getState().outgoingCall;
-      const declinedRoom = localStorage.getItem("callDeclined");
-      const incomingCall = useCallStore.getState().incomingCall;
+  // useEffect(() => {
+  //   const checkManualCancel = () => {
+  //     const outgoingCall = useCallStore.getState().outgoingCall;
+  //     const declinedRoom = localStorage.getItem("callDeclined");
+  //     const incomingCall = useCallStore.getState().incomingCall;
 
-      if (declinedRoom === "manual-cancel" && incomingCall) {
-        // alert(`${outgoingCall?.calleeName} declined or canceled the call`);
+  //     if (declinedRoom === "manual-cancel" && incomingCall) {
+  //       // alert(`${outgoingCall?.calleeName} declined or canceled the call`);
 
-        useCallStore.getState().clearIncomingCall();
-        localStorage.removeItem("callDeclined");
-      }
-    };
+  //       useCallStore.getState().clearIncomingCall();
+  //       localStorage.removeItem("callDeclined");
+  //     }
+  //   };
 
-    window.addEventListener("focus", checkManualCancel);
-    return () => window.removeEventListener("focus", checkManualCancel);
-  }, []);
+  //   window.addEventListener("focus", checkManualCancel);
+  //   return () => window.removeEventListener("focus", checkManualCancel);
+  // }, []);
+
   // !this is the clear the outgoing call each time we navigate back to main page so that previous call isn't make again
-  useEffect(() => {
-    useCallStore.getState().clearOutgoingCall();
-  }, []);
+  // useEffect(() => {
+  //   useCallStore.getState().clearOutgoingCall();
+  // }, []);
 
   return (
     <div className="font-sans ">

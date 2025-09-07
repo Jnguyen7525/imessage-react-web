@@ -5,8 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { IncomingCallPopup } from "./IncomingCall";
 import { OutgoingCallStatus } from "./OutgoingCall";
+import { useCallSignaling } from "@/hooks/useCallSignaling";
 
 export default function CallUIOverlay() {
+  useCallSignaling(); // ✅ This runs all the signaling logic
+
   const incomingCall = useCallStore((s) => s.incomingCall);
   const outgoingCall = useCallStore((s) => s.outgoingCall);
   const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
