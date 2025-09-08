@@ -9,10 +9,15 @@ export default async function CustomRoomConnection(props: {
     codec?: string;
     // !added this for sidebar caller panel
     participantName: string; // ✅ Add this
+    audioOnly?: string;
   }>;
 }) {
-  const { liveKitUrl, token, codec, participantName } =
+  // const { liveKitUrl, token, codec, participantName } =
+  //   await props.searchParams;
+  const { liveKitUrl, token, codec, participantName, audioOnly } =
     await props.searchParams;
+  const isAudioOnly = audioOnly === "true";
+
   if (typeof liveKitUrl !== "string") {
     return <h2>Missing LiveKit URL</h2>;
   }
@@ -36,6 +41,7 @@ export default async function CustomRoomConnection(props: {
         token={token}
         codec={codec}
         participantName={name} // ✅ Pass it here
+        audioOnly={isAudioOnly}
       />
     </main>
   );

@@ -20,8 +20,9 @@ import { KeyboardShortcuts } from "@/lib/KeyboardShortcuts";
 import { SettingsMenu } from "@/lib/SettingsMenu";
 import { useSetupE2EE } from "@/lib/useSetupE2EE";
 import { useLowCPUOptimizer } from "@/lib/usePerfomanceOptimiser";
-import SidebarCallerPanel from "../components/SidebarCallerPanel";
+
 import { CustomVideoConference } from "../components/CustomVideoConference";
+import { CustomConference } from "../components/CustomConference";
 
 export function VideoConferenceClientImpl(props: {
   liveKitUrl: string;
@@ -29,6 +30,7 @@ export function VideoConferenceClientImpl(props: {
   codec: VideoCodec | undefined;
   // !added this for sidebar caller panel
   participantName: string; // ✅ Add this
+  audioOnly?: boolean;
 }) {
   const keyProvider = new ExternalE2EEKeyProvider();
   const { worker, e2eePassphrase } = useSetupE2EE();
@@ -91,13 +93,23 @@ export function VideoConferenceClientImpl(props: {
         .connect(props.liveKitUrl, props.token, connectOptions)
         .then(() => {
           return Promise.all([
-            room.localParticipant.setCameraEnabled(true),
+            // room.localParticipant.setCameraEnabled(true),
+            room.localParticipant.setCameraEnabled(!props.audioOnly),
+
             room.localParticipant.setMicrophoneEnabled(true),
           ]);
         })
         .catch(console.error);
     }
-  }, [e2eeSetupComplete, room, props.liveKitUrl, props.token, connectOptions]);
+    // }, [e2eeSetupComplete, room, props.liveKitUrl, props.token, connectOptions]);
+  }, [
+    e2eeSetupComplete,
+    room,
+    props.liveKitUrl,
+    props.token,
+    connectOptions,
+    props.audioOnly,
+  ]);
 
   useLowCPUOptimizer(room);
 
@@ -116,7 +128,17 @@ export function VideoConferenceClientImpl(props: {
               : undefined
           }
         /> */}
-        <CustomVideoConference
+        {/* <CustomVideoConference
+          chatMessageFormatter={formatChatMessageLinks}
+          SettingsComponent={
+            process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU === "true"
+              ? SettingsMenu
+              : undefined
+          }
+        /> */}
+        <CustomConference
+          audioOnly={props.audioOnly}
+          participantName={props.participantName}
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={
             process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU === "true"
