@@ -78,7 +78,10 @@ function Header() {
     // ⏱️ Timeout after 30 seconds if unanswered
     setTimeout(() => {
       const currentCall = useCallStore.getState().outgoingCall;
-      const acceptedRoom = localStorage.getItem("callAccepted");
+      // const acceptedRoom = localStorage.getItem("callAccepted");
+      const acceptedRoom = localStorage.getItem(
+        `callAccepted-${participantName}`
+      );
 
       if (currentCall?.roomName === roomName && acceptedRoom !== roomName) {
         alert("Call timed out — no response");

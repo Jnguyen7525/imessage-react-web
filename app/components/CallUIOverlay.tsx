@@ -28,7 +28,14 @@ export default function CallUIOverlay() {
           );
           const data = await res.json();
           // Notify caller that callee accepted
-          localStorage.setItem("callAccepted", incomingCall.roomName);
+
+          //   localStorage.setItem("callAccepted", incomingCall.roomName);
+          // ✅ Scoped signal to caller
+
+          localStorage.setItem(
+            `callAccepted-${incomingCall.callerName}`,
+            incomingCall.roomName
+          );
 
           // router.push(
           //   `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}`

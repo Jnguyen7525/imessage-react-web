@@ -338,6 +338,24 @@ export function CustomVideoConference({
                                 callerToken: data.participantToken,
                                 callerName: participantName, // 👈 add this
                               });
+
+                              setTimeout(() => {
+                                const currentCall =
+                                  useCallStore.getState().outgoingCall;
+                                const acceptedRoom = localStorage.getItem(
+                                  `callAccepted-${participantName}`
+                                );
+
+                                if (
+                                  currentCall?.roomName === roomName &&
+                                  acceptedRoom !== roomName
+                                ) {
+                                  alert(
+                                    `${msg.name} did not respond — call timed out`
+                                  );
+                                  useCallStore.getState().clearOutgoingCall();
+                                }
+                              }, 30000);
                             }}
                           >
                             <Phone size={22} />
