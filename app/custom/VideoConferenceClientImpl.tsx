@@ -22,7 +22,6 @@ import { useSetupE2EE } from "@/lib/useSetupE2EE";
 import { useLowCPUOptimizer } from "@/lib/usePerfomanceOptimiser";
 
 import { CustomVideoConference } from "../components/CustomVideoConference";
-import { CustomConference } from "../components/CustomConference";
 
 export function VideoConferenceClientImpl(props: {
   liveKitUrl: string;
@@ -136,9 +135,10 @@ export function VideoConferenceClientImpl(props: {
               : undefined
           }
         /> */}
-        <CustomConference
-          audioOnly={props.audioOnly}
-          participantName={props.participantName}
+
+        <CustomVideoConference
+          // participantName={props.participantName}
+          cameraEnabled={!props.audioOnly} // ✅ disables camera for audio-only calls
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={
             process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU === "true"

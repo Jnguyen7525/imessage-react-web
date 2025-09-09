@@ -110,6 +110,53 @@ function Header() {
   React.useEffect(() => {
     console.log("Selected (via useMemo):", selectedConversation);
   }, [selectedConversation]);
+
+  const startAudioCall = async () => {
+    if (!selectedConversation) return;
+
+    const callerInfo = messagesArray.find(
+      (msg) => msg.name === participantName
+    );
+    const callerAvatar = callerInfo?.avatar ?? "";
+    const roomName = generateRoomId();
+
+    const res = await fetch(
+      `/api/connection-details?roomName=${roomName}&participantName=${participantName}`
+    );
+    const data = await res.json();
+
+    localStorage.setItem(
+      `incomingCall-${selectedConversation.name}`,
+      JSON.stringify({
+        roomName,
+        caller: participantName,
+        liveKitUrl: data.serverUrl,
+        callerAvatar,
+        audioOnly: true, // ✅ flag for callee
+      })
+    );
+
+    setOutgoingCall({
+      calleeName: selectedConversation.name,
+      calleeAvatar: selectedConversation.avatar,
+      roomName,
+      liveKitUrl: data.serverUrl,
+      callerToken: data.participantToken,
+      callerName: participantName,
+      audioOnly: true, // ✅ pass to UI logic
+    });
+
+    setTimeout(() => {
+      const currentCall = useCallStore.getState().outgoingCall;
+      const acceptedRoom = localStorage.getItem(
+        `callAccepted-${participantName}`
+      );
+      if (currentCall?.roomName === roomName && acceptedRoom !== roomName) {
+        alert("Audio call timed out — no response");
+        useCallStore.getState().clearOutgoingCall();
+      }
+    }, 30000);
+  };
   return (
     <div className="bg-[#09090b] w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800">
       <div className="">
@@ -137,6 +184,7 @@ function Header() {
           className={`${
             selectedConversation ? "cursor-pointer hover:opacity-50" : "hidden"
           }`}
+          onClick={startAudioCall}
         />
         <Video
           className={`${

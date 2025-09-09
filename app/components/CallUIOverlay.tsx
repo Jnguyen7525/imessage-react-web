@@ -40,8 +40,17 @@ export default function CallUIOverlay() {
           // router.push(
           //   `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}`
           // );
+          // router.push(
+          //   `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}&user=${participantName}`
+          // );
           router.push(
-            `/custom/?liveKitUrl=${data.serverUrl}&token=${data.participantToken}&roomName=${incomingCall.roomName}&user=${participantName}`
+            `/custom/?liveKitUrl=${data.serverUrl}&token=${
+              data.participantToken
+            }&roomName=${
+              incomingCall.roomName
+            }&user=${participantName}&audioOnly=${
+              incomingCall.audioOnly ? "true" : "false"
+            }`
           );
           clearIncomingCall();
         }}

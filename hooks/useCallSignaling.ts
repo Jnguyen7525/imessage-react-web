@@ -138,7 +138,9 @@ export function useCallSignaling() {
     const checkIncomingCall = () => {
       const callData = localStorage.getItem(`incomingCall-${participantName}`);
       if (callData) {
-        const { roomName, caller, liveKitUrl, callerAvatar } =
+        // const { roomName, caller, liveKitUrl, callerAvatar } =
+        //   JSON.parse(callData);
+        const { roomName, caller, liveKitUrl, callerAvatar, audioOnly } =
           JSON.parse(callData);
 
         setIncomingCall({
@@ -146,6 +148,7 @@ export function useCallSignaling() {
           callerAvatar,
           roomName,
           liveKitUrl,
+          audioOnly, // ✅ Add this
         });
 
         const audio = new Audio("/ringtone.mp3");
@@ -184,8 +187,15 @@ export function useCallSignaling() {
       if (acceptedRoom && outgoingCall?.roomName === acceptedRoom) {
         // ✅ Only navigate if not already in the correct room
         if (!alreadyInRoom) {
+          // router.push(
+          //   `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${outgoingCall.callerToken}&roomName=${outgoingCall.roomName}&user=${outgoingCall.callerName}`
+          // );
           router.push(
-            `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${outgoingCall.callerToken}&roomName=${outgoingCall.roomName}&user=${outgoingCall.callerName}`
+            `/custom/?liveKitUrl=${outgoingCall.liveKitUrl}&token=${
+              outgoingCall.callerToken
+            }&roomName=${outgoingCall.roomName}&user=${
+              outgoingCall.callerName
+            }&audioOnly=${outgoingCall.audioOnly ? "true" : "false"}`
           );
         }
 

@@ -38,6 +38,7 @@ import {
   log,
   MessageDecoder,
   MessageEncoder,
+  TrackReference,
 } from "@livekit/components-core";
 import {
   CarouselLayout,
@@ -49,28 +50,76 @@ import {
   GridLayout,
   LayoutContextProvider,
   type MessageFormatter,
+  ParticipantAudioTile,
+  ParticipantLoop,
+  ParticipantName,
   ParticipantTile,
   RoomAudioRenderer,
   TrackReferenceOrPlaceholder,
   useCreateLayoutContext,
   useParticipants,
+  useParticipantTile,
   usePinnedTracks,
   useRoomContext,
   useTracks,
   WidgetState,
 } from "@livekit/components-react";
 import { RoomEvent, Track } from "livekit-client";
-import { EllipsisVertical, Phone, UserMinus2 } from "lucide-react";
+import { EllipsisVertical, Phone, UserMinus2, Volume2 } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 import toast from "react-hot-toast";
+
+function CustomAudioTile({ trackRef }: { trackRef: TrackReference }) {
+  const elementProps = useParticipantTile({
+    trackRef,
+    htmlProps: {},
+  }).elementProps;
+
+  const participant = trackRef.participant;
+  const displayName = participant.name ?? participant.identity;
+  const matchedMessage = messagesArray.find((msg) => msg.name === displayName);
+  const avatar = matchedMessage?.avatar;
+
+  return (
+    <div
+      {...elementProps}
+      className="flex flex-col items-center justify-center border border-gray-700 rounded-lg p-4 bg-zinc-900 text-white"
+    >
+      <div className="relative">
+        {avatar ? (
+          <Image
+            src={avatar}
+            alt={displayName}
+            className="w-16 h-16 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-zinc-700 flex items-center justify-center text-white text-xl">
+            {displayName.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <Volume2
+          size={20}
+          className={`absolute top-0 right-0 ${
+            participant.isSpeaking
+              ? "text-green-400 animate-pulse"
+              : "text-zinc-400"
+          } bg-zinc-800 rounded-full p-1`}
+        />
+      </div>
+      <span className="mt-2 text-sm font-medium">{displayName}</span>
+    </div>
+  );
+}
 
 /**
  * @public
  */
 export interface VideoConferenceProps
   extends React.HTMLAttributes<HTMLDivElement> {
+  cameraEnabled?: boolean;
+
   chatMessageFormatter?: MessageFormatter;
   chatMessageEncoder?: MessageEncoder;
   chatMessageDecoder?: MessageDecoder;
@@ -97,6 +146,8 @@ export interface VideoConferenceProps
  * @public
  */
 export function CustomVideoConference({
+  cameraEnabled = true, // ✅ default to video
+
   chatMessageFormatter,
   chatMessageDecoder,
   chatMessageEncoder,
@@ -132,6 +183,11 @@ export function CustomVideoConference({
     ],
     { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false }
   );
+
+  const audioTracks = useTracks(
+    [{ source: Track.Source.Microphone, withPlaceholder: false }],
+    { onlySubscribed: true }
+  ).filter(isTrackReference);
 
   const widgetUpdate = (state: WidgetState) => {
     log.debug("updating widget state", state);
@@ -242,6 +298,14 @@ export function CustomVideoConference({
   }, []);
 
   //   useWarnAboutMissingStyles();
+
+  React.useEffect(() => {
+    if (cameraEnabled === false) {
+      room.localParticipant.setCameraEnabled(false).catch(() => {
+        toast.error("Failed to disable camera");
+      });
+    }
+  }, [cameraEnabled, room]);
 
   return (
     <div className="lk-video-conference " {...props}>
@@ -442,7 +506,12 @@ export function CustomVideoConference({
                 {!focusTrack ? (
                   <div className="lk-grid-layout-wrapper">
                     <GridLayout tracks={tracks}>
-                      <ParticipantTile />
+                      {/* <ParticipantTile /> */}
+                      {cameraEnabled ? (
+                        <ParticipantTile />
+                      ) : (
+                        <ParticipantAudioTile />
+                      )}
                     </GridLayout>
                   </div>
                 ) : (

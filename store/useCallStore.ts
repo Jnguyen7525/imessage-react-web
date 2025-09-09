@@ -7,6 +7,7 @@ type CallState = {
     callerAvatar: string;
     roomName: string;
     liveKitUrl: string;
+    audioOnly?: boolean; // ✅ Add this
   };
 
   outgoingCall: null | {
@@ -16,6 +17,7 @@ type CallState = {
     liveKitUrl: string;
     callerToken: string;
     callerName: string; // ✅ Add this line
+    audioOnly?: boolean; // ✅ Add this line
   };
 
   setIncomingCall: (data: CallState["incomingCall"]) => void;
