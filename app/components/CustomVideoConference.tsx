@@ -70,6 +70,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 import toast from "react-hot-toast";
+import { CustomParticipantTile } from "./CustomParticipantTile";
 
 function CustomAudioTile({ trackRef }: { trackRef: TrackReference }) {
   const elementProps = useParticipantTile({
@@ -507,11 +508,12 @@ export function CustomVideoConference({
                   <div className="lk-grid-layout-wrapper">
                     <GridLayout tracks={tracks}>
                       {/* <ParticipantTile /> */}
-                      {cameraEnabled ? (
+                      {/* {cameraEnabled ? (
                         <ParticipantTile />
                       ) : (
                         <ParticipantAudioTile />
-                      )}
+                      )} */}
+                      <CustomParticipantTile />
                     </GridLayout>
                   </div>
                 ) : (
