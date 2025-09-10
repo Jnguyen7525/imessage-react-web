@@ -168,6 +168,7 @@ export function CustomVideoConference({
   const searchParams = useSearchParams();
   const liveKitUrl = searchParams.get("liveKitUrl");
   const participantName = searchParams.get("user") ?? "anonymous";
+  const audioOnly = searchParams.get("audioOnly") === "true";
 
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
@@ -184,11 +185,6 @@ export function CustomVideoConference({
     ],
     { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false }
   );
-
-  const audioTracks = useTracks(
-    [{ source: Track.Source.Microphone, withPlaceholder: false }],
-    { onlySubscribed: true }
-  ).filter(isTrackReference);
 
   const widgetUpdate = (state: WidgetState) => {
     log.debug("updating widget state", state);
@@ -392,6 +388,7 @@ export function CustomVideoConference({
                                   caller: participantName,
                                   liveKitUrl: data.serverUrl,
                                   callerAvatar, // ✅ now using the correct avatar
+                                  audioOnly, // ✅ propagate the flag
                                 })
                               );
 
@@ -402,6 +399,7 @@ export function CustomVideoConference({
                                 liveKitUrl: data.serverUrl,
                                 callerToken: data.participantToken,
                                 callerName: participantName, // 👈 add this
+                                audioOnly, // ✅ pass to UI logic
                               });
 
                               setTimeout(() => {

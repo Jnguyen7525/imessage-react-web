@@ -177,19 +177,6 @@ export const CustomParticipantTile: (
           <ParticipantContextIfNeeded participant={trackReference.participant}>
             {children ?? (
               <>
-                {/* {hasVideo ? (
-                  <VideoTrack
-                    trackRef={trackReference}
-                    onSubscriptionStatusChanged={handleSubscribe}
-                    manageSubscription={autoManageSubscription}
-                  />
-                ) : (
-                  <AudioTrack
-                    trackRef={trackReference as TrackReference}
-                    onSubscriptionStatusChanged={handleSubscribe}
-                  />
-                )} */}
-
                 {hasVideo ? (
                   <VideoTrack
                     trackRef={trackReference}
