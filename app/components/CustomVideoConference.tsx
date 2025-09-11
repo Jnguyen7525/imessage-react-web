@@ -67,10 +67,11 @@ import {
 import { RoomEvent, Track } from "livekit-client";
 import { EllipsisVertical, Phone, UserMinus2, Volume2 } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import toast from "react-hot-toast";
 import { CustomParticipantTile } from "./CustomParticipantTile";
+import { useRoomBridgeStore } from "@/store/useRoomBridgeStore";
 
 function CustomAudioTile({ trackRef }: { trackRef: TrackReference }) {
   const elementProps = useParticipantTile({
@@ -161,7 +162,11 @@ export function CustomVideoConference({
   >("contacts");
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
+  const router = useRouter();
+
   const room = useRoomContext();
+  useRoomBridgeStore.getState().setRoom(room);
+
 
   const participants = useParticipants();
   const roomName = room.name;
@@ -279,6 +284,8 @@ export function CustomVideoConference({
   React.useEffect(() => {
     const onDisconnect = () => {
       toast("You’ve been removed from the room", { icon: "🚫" });
+      // router.push("/"); // ✅ Send user back to inbox or main view
+      router.push(`/?user=${encodeURIComponent(participantName)}`);
     };
 
     room.on(RoomEvent.Disconnected, onDisconnect);
