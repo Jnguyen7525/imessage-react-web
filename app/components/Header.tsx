@@ -4,38 +4,17 @@ import { useConversationStore } from "@/store/useConversationStore";
 import { Ellipsis, Phone, Video } from "lucide-react";
 import Image from "next/image";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import React, { Suspense, useEffect, useState } from "react";
-import {
-  encodePassphrase,
-  generateRoomId,
-  randomString,
-} from "@/lib/client-utils";
-import styles from "@/styles/Home.module.css";
+import { useSearchParams } from "next/navigation";
+import React, { useState } from "react";
+import { generateRoomId } from "@/lib/client-utils";
 import { useCallStore } from "@/store/useCallStore";
 import { messagesArray } from "@/utils/messages";
 
 function Header() {
-  const router = useRouter();
-
   const searchParams = useSearchParams();
   const participantName = searchParams.get("user") ?? "anonymous";
 
   const setOutgoingCall = useCallStore((state) => state.setOutgoingCall);
-  const clearOutgoingCall = useCallStore((state) => state.clearOutgoingCall);
-
-  const [e2ee, setE2ee] = useState(false);
-  const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
-
-  // const startMeeting = () => {
-  //   if (e2ee) {
-  //     router.push(
-  //       `/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`
-  //     );
-  //   } else {
-  //     router.push(`/rooms/${generateRoomId()}`);
-  //   }
-  // };
 
   // !second try now with callinguioverlay
   const startMeeting = async () => {
