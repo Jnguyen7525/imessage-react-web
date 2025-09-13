@@ -4,8 +4,7 @@ import { messaging } from "./firebaseConfig";
 export async function registerFCMToken() {
   try {
     const token = await getToken(messaging, {
-      vapidKey:
-        "BP7i75CMcjM-vHfVd0B8TD4y6eUKnycz1zNrvah7eBMkJETIHscxhOT_cqea_GvB9zE3NqvidBxfQT8ZRJUVu3k",
+      vapidKey: process.env.FIREBASE_VAPID_PUBLIC_KEY,
     });
 
     // Send token to your backend to store it
