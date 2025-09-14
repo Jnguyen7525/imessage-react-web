@@ -60,8 +60,11 @@ export default function Home() {
   }, [selectedConversation]);
 
   // Call registerFCMToken() when the user logs in or loads the app.
-  registerFCMToken();
-  
+  useEffect(() => {
+    console.log("Registering FCM token for:", participantName);
+    registerFCMToken(participantName);
+  }, [participantName]);
+
   return (
     <div className="font-sans ">
       <main

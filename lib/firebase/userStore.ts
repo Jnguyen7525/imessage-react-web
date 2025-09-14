@@ -16,7 +16,11 @@ import { supabase } from "../supabase/supabase";
 // }
 
 export async function saveFCMTokenForUser(userId: string, token: string) {
-  await supabase.from("fcm_tokens").upsert({ user_id: userId, token });
+  const { error } = await supabase
+    .from("fcm_tokens")
+    .upsert({ user_id: userId, token });
+
+  return { error };
 }
 
 export async function getFCMTokenForUser(
