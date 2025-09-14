@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
     roomName,
     liveKitUrl,
     audioOnly,
+    callerToken, // ✅ Add this
   } = body;
 
   console.log("Sending call invite to:", calleeId);
@@ -57,10 +58,11 @@ export async function POST(req: NextRequest) {
   console.log("Sending payload:", {
     type: "incoming_call",
     callerName,
-    callerAvatar,
+    callerAvatar: JSON.stringify(callerAvatar),
     roomName,
     liveKitUrl,
     audioOnly: audioOnly ? "true" : "false",
+    recipientId: calleeId,
   });
 
   await sendFCM(fcmToken, {
@@ -70,6 +72,8 @@ export async function POST(req: NextRequest) {
     roomName,
     liveKitUrl,
     audioOnly: audioOnly ? "true" : "false",
+    recipientId: String(calleeId),
+    callerToken: String(callerToken), // ✅ Force to string
   });
 
   return NextResponse.json({ success: true });

@@ -240,6 +240,7 @@ function Header() {
         roomName,
         liveKitUrl: data.serverUrl,
         audioOnly: false,
+        callerToken: data.participantToken, // ✅ Add this
       }),
     });
 
@@ -289,6 +290,7 @@ function Header() {
         roomName,
         liveKitUrl: data.serverUrl,
         audioOnly: true,
+        callerToken: data.participantToken, // ✅ Add this
       }),
     });
 
@@ -300,6 +302,10 @@ function Header() {
       callerToken: data.participantToken,
       callerName: participantName,
       audioOnly: true,
+    });
+    console.log("Outgoing call set:", {
+      calleeName: selectedConversation.name,
+      callerName: participantName,
     });
 
     setTimeout(() => {

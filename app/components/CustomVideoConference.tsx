@@ -118,7 +118,9 @@ export function CustomVideoConference({
   const router = useRouter();
 
   const room = useRoomContext();
-  useRoomBridgeStore.getState().setRoom(room);
+  React.useEffect(() => {
+    useRoomBridgeStore.getState().setRoom(room);
+  }, [room]);
 
   const participants = useParticipants();
   const roomName = room.name;

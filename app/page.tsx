@@ -65,6 +65,14 @@ export default function Home() {
     registerFCMToken(participantName);
   }, [participantName]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        console.log("✅ Message received from service worker:", event.data);
+      });
+    }
+  }, []);
+
   return (
     <div className="font-sans ">
       <main

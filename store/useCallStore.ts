@@ -8,6 +8,7 @@ type CallState = {
     roomName: string;
     liveKitUrl: string;
     audioOnly?: boolean; // ✅ Add this
+    callerToken: string; // ✅ Add this line
   };
 
   outgoingCall: null | {
