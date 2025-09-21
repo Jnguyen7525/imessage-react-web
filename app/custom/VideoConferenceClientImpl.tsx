@@ -8,14 +8,16 @@ import {
 import {
   ExternalE2EEKeyProvider,
   LogLevel,
+  RemoteParticipant,
   Room,
   RoomConnectOptions,
+  RoomEvent,
   RoomOptions,
   VideoPresets,
   type VideoCodec,
 } from "livekit-client";
 import { DebugMode } from "@/lib/Debug";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardShortcuts } from "@/lib/KeyboardShortcuts";
 import { SettingsMenu } from "@/lib/SettingsMenu";
 import { useSetupE2EE } from "@/lib/useSetupE2EE";
@@ -36,6 +38,8 @@ export function VideoConferenceClientImpl(props: {
   const e2eeEnabled = !!(e2eePassphrase && worker);
 
   const [e2eeSetupComplete, setE2eeSetupComplete] = useState(false);
+
+  const hasConnectedRef = useRef(false);
 
   const roomOptions = useMemo((): RoomOptions => {
     return {
@@ -87,10 +91,55 @@ export function VideoConferenceClientImpl(props: {
   // }, [room, props.liveKitUrl, props.token, connectOptions, e2eeSetupComplete]);
   // !fixes the error  Element not part of the array: bob__dwo9_camera_placeholder not in alice__dwo9_camera_TR_VCPxWn3AhBKg7b,bob__dwo9_camera_TR_VCjLRxKtFqEkBZ
   useEffect(() => {
-    if (e2eeSetupComplete) {
+    // if (e2eeSetupComplete) {
+    if (e2eeSetupComplete && !hasConnectedRef.current) {
+      hasConnectedRef.current = true;
+
       room
         .connect(props.liveKitUrl, props.token, connectOptions)
         .then(() => {
+          console.log(
+            "🧍 Local participant identity:",
+            room.localParticipant.identity
+          );
+
+          // 🔧 Helper to log all participants
+          const logCurrentParticipants = () => {
+            const allParticipants = [
+              room.localParticipant,
+              ...Array.from(room.remoteParticipants.values()),
+            ];
+            console.log("👥 Current participants in room:", room.name);
+            allParticipants.forEach((p) => {
+              console.log(`- ${p.identity}`);
+            });
+            console.log("📊 Total participants:", allParticipants.length);
+          };
+
+          // ✅ Log when someone connects
+          room.on(
+            RoomEvent.ParticipantConnected,
+            (participant: RemoteParticipant) => {
+              console.log("🔗 Participant connected:", participant.identity);
+              logCurrentParticipants();
+            }
+          );
+
+          // ✅ Log when someone disconnects
+          room.on(
+            RoomEvent.ParticipantDisconnected,
+            (participant: RemoteParticipant) => {
+              console.log("❌ Participant disconnected:", participant.identity);
+              logCurrentParticipants();
+            }
+          );
+
+          // ✅ Log when the room disconnects (e.g. kicked, network drop)
+          room.on(RoomEvent.Disconnected, (reason) => {
+            console.warn("❌ Room disconnected:", reason);
+            logCurrentParticipants();
+          });
+
           return Promise.all([
             // room.localParticipant.setCameraEnabled(true),
             room.localParticipant.setCameraEnabled(!props.audioOnly),
@@ -111,6 +160,13 @@ export function VideoConferenceClientImpl(props: {
   ]);
 
   useLowCPUOptimizer(room);
+
+  useEffect(() => {
+    console.log(
+      "🧍 Mounting VideoConferenceClientImpl with identity:",
+      props.participantName
+    );
+  }, [props.participantName]);
 
   return (
     <div className="lk-room-container">

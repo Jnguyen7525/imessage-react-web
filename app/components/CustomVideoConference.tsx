@@ -128,6 +128,8 @@ export function CustomVideoConference({
   const participantName = searchParams.get("user") ?? "anonymous";
   const audioOnly = searchParams.get("audioOnly") === "true";
 
+  const wasKickedRef = React.useRef(false);
+
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
     unreadMessages: 0,
@@ -216,6 +218,8 @@ export function CustomVideoConference({
     const roomName = room.name; // or get from URL/query param
 
     try {
+      wasKickedRef.current = true; // ✅ Mark this as an intentional kick
+
       const res = await fetch("/api/kick-participant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -234,10 +238,33 @@ export function CustomVideoConference({
     }
   };
 
+  // React.useEffect(() => {
+  //   const onDisconnect = () => {
+  //     toast("You’ve been removed from the room", { icon: "🚫" });
+  //     // router.push("/"); // ✅ Send user back to inbox or main view
+  //     router.push(`/?user=${encodeURIComponent(participantName)}`);
+  //   };
+
+  //   room.on(RoomEvent.Disconnected, onDisconnect);
+
+  //   return () => {
+  //     room.off(RoomEvent.Disconnected, onDisconnect);
+  //   };
+  // }, [room]);
+
   React.useEffect(() => {
     const onDisconnect = () => {
-      toast("You’ve been removed from the room", { icon: "🚫" });
-      // router.push("/"); // ✅ Send user back to inbox or main view
+      const identity = room.localParticipant.identity;
+      const roomState = room.state;
+
+      if (wasKickedRef.current) {
+        toast("You’ve been removed from the room", { icon: "🚫" });
+        console.warn("❌ Disconnected due to kick:", identity);
+      } else {
+        console.warn("❌ Disconnected unexpectedly:", identity);
+        console.log("🧭 Room state before disconnect:", roomState);
+      }
+
       router.push(`/?user=${encodeURIComponent(participantName)}`);
     };
 
@@ -246,13 +273,17 @@ export function CustomVideoConference({
     return () => {
       room.off(RoomEvent.Disconnected, onDisconnect);
     };
-  }, [room]);
+  }, [room, router, participantName]);
 
   React.useEffect(() => {
-    return () => {
-      useCallStore.getState().clearOutgoingCall();
-    };
-  }, []);
+    wasKickedRef.current = false;
+  }, [room.name]);
+
+  // React.useEffect(() => {
+  //   return () => {
+  //     useCallStore.getState().clearOutgoingCall();
+  //   };
+  // }, []);
 
   //   useWarnAboutMissingStyles();
 
@@ -319,70 +350,6 @@ export function CustomVideoConference({
                             <span>{msg.name}</span>
                           </div>
 
-                          {/* <button
-                            className="text-[#851de0] hover:opacity-70 cursor-pointer"
-                            onClick={async () => {
-                              const res = await fetch(
-                                `/api/connection-details?roomName=${roomName}&participantName=${msg.name}`
-                              );
-                              const data = await res.json();
-
-                              const callerInfo = messagesArray.find(
-                                (m) => m.name === participantName
-                              );
-                              const callerAvatar = callerInfo?.avatar ?? "";
-
-                              if (
-                                !participantName ||
-                                participantName === "anonymous"
-                              ) {
-                                console.warn(
-                                  "Caller name is missing or defaulted to anonymous"
-                                );
-                              }
-
-                              localStorage.setItem(
-                                `incomingCall-${msg.name}`,
-                                JSON.stringify({
-                                  roomName,
-                                  caller: participantName,
-                                  liveKitUrl: data.serverUrl,
-                                  callerAvatar, // ✅ now using the correct avatar
-                                  audioOnly, // ✅ propagate the flag
-                                })
-                              );
-
-                              useCallStore.getState().setOutgoingCall({
-                                calleeName: msg.name,
-                                calleeAvatar: msg.avatar,
-                                roomName,
-                                liveKitUrl: data.serverUrl,
-                                callerToken: data.participantToken,
-                                callerName: participantName, // 👈 add this
-                                audioOnly, // ✅ pass to UI logic
-                              });
-
-                              setTimeout(() => {
-                                const currentCall =
-                                  useCallStore.getState().outgoingCall;
-                                const acceptedRoom = localStorage.getItem(
-                                  `callAccepted-${participantName}`
-                                );
-
-                                if (
-                                  currentCall?.roomName === roomName &&
-                                  acceptedRoom !== roomName
-                                ) {
-                                  alert(
-                                    `${msg.name} did not respond — call timed out`
-                                  );
-                                  useCallStore.getState().clearOutgoingCall();
-                                }
-                              }, 30000);
-                            }}
-                          >
-                            <Phone size={22} />
-                          </button> */}
                           <button
                             className="text-[#851de0] hover:opacity-70 cursor-pointer"
                             onClick={async () => {
@@ -410,24 +377,38 @@ export function CustomVideoConference({
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
+                                  // calleeId: msg.name,
+                                  // callerName: participantName,
+                                  // callerAvatar,
+                                  // roomName,
+                                  // liveKitUrl: data.serverUrl,
+                                  // audioOnly,
                                   calleeId: msg.name,
                                   callerName: participantName,
                                   callerAvatar,
                                   roomName,
                                   liveKitUrl: data.serverUrl,
-                                  audioOnly,
+                                  audioOnly: audioOnly,
+                                  callerToken: data.participantToken, // ✅ Add this
                                 }),
                               });
 
                               // 🎯 Update Zustand with outgoing call state
                               useCallStore.getState().setOutgoingCall({
+                                // calleeName: msg.name,
+                                // calleeAvatar: msg.avatar,
+                                // roomName,
+                                // liveKitUrl: data.serverUrl,
+                                // callerToken: data.participantToken,
+                                // callerName: participantName,
+                                // audioOnly,
                                 calleeName: msg.name,
                                 calleeAvatar: msg.avatar,
                                 roomName,
                                 liveKitUrl: data.serverUrl,
                                 callerToken: data.participantToken,
                                 callerName: participantName,
-                                audioOnly,
+                                audioOnly: audioOnly,
                               });
 
                               // ⏱️ Timeout after 30 seconds if unanswered

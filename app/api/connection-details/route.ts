@@ -1,41 +1,53 @@
-import { randomString } from '@/lib/client-utils';
-import { getLiveKitURL } from '@/lib/getLiveKitURL';
-import { ConnectionDetails } from '@/lib/types';
-import { AccessToken, AccessTokenOptions, VideoGrant } from 'livekit-server-sdk';
-import { NextRequest, NextResponse } from 'next/server';
+import { randomString } from "@/lib/client-utils";
+import { getLiveKitURL } from "@/lib/getLiveKitURL";
+import { ConnectionDetails } from "@/lib/types";
+import {
+  AccessToken,
+  AccessTokenOptions,
+  VideoGrant,
+} from "livekit-server-sdk";
+import { NextRequest, NextResponse } from "next/server";
 
 const API_KEY = process.env.LIVEKIT_API_KEY;
 const API_SECRET = process.env.LIVEKIT_API_SECRET;
 const LIVEKIT_URL = process.env.LIVEKIT_URL;
 
-const COOKIE_KEY = 'random-participant-postfix';
+const COOKIE_KEY = "random-participant-postfix";
 
 export async function GET(request: NextRequest) {
   try {
     // Parse query parameters
-    const roomName = request.nextUrl.searchParams.get('roomName');
-    const participantName = request.nextUrl.searchParams.get('participantName');
-    const metadata = request.nextUrl.searchParams.get('metadata') ?? '';
-    const region = request.nextUrl.searchParams.get('region');
+    const roomName = request.nextUrl.searchParams.get("roomName");
+    const participantName = request.nextUrl.searchParams.get("participantName");
+    const metadata = request.nextUrl.searchParams.get("metadata") ?? "";
+    const region = request.nextUrl.searchParams.get("region");
     if (!LIVEKIT_URL) {
-      throw new Error('LIVEKIT_URL is not defined');
+      throw new Error("LIVEKIT_URL is not defined");
     }
-    const livekitServerUrl = region ? getLiveKitURL(LIVEKIT_URL, region) : LIVEKIT_URL;
+    const livekitServerUrl = region
+      ? getLiveKitURL(LIVEKIT_URL, region)
+      : LIVEKIT_URL;
     let randomParticipantPostfix = request.cookies.get(COOKIE_KEY)?.value;
     if (livekitServerUrl === undefined) {
-      throw new Error('Invalid region');
+      throw new Error("Invalid region");
     }
 
-    if (typeof roomName !== 'string') {
-      return new NextResponse('Missing required query parameter: roomName', { status: 400 });
+    if (typeof roomName !== "string") {
+      return new NextResponse("Missing required query parameter: roomName", {
+        status: 400,
+      });
     }
     if (participantName === null) {
-      return new NextResponse('Missing required query parameter: participantName', { status: 400 });
+      return new NextResponse(
+        "Missing required query parameter: participantName",
+        { status: 400 }
+      );
     }
 
     // Generate participant token
     if (!randomParticipantPostfix) {
       randomParticipantPostfix = randomString(4);
+      // `${Date.now()}_${randomString(4)}`;
     }
     const participantToken = await createParticipantToken(
       {
@@ -43,7 +55,12 @@ export async function GET(request: NextRequest) {
         name: participantName,
         metadata,
       },
-      roomName,
+      roomName
+    );
+
+    console.log(
+      "🔐 Issuing token for:",
+      `${participantName}__${randomParticipantPostfix}`
     );
 
     // Return connection details
@@ -55,8 +72,8 @@ export async function GET(request: NextRequest) {
     };
     return new NextResponse(JSON.stringify(data), {
       headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': `${COOKIE_KEY}=${randomParticipantPostfix}; Path=/; HttpOnly; SameSite=Strict; Secure; Expires=${getCookieExpirationTime()}`,
+        "Content-Type": "application/json",
+        "Set-Cookie": `${COOKIE_KEY}=${randomParticipantPostfix}; Path=/; HttpOnly; SameSite=Strict; Secure; Expires=${getCookieExpirationTime()}`,
       },
     });
   } catch (error) {
@@ -66,9 +83,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function createParticipantToken(userInfo: AccessTokenOptions, roomName: string) {
+function createParticipantToken(
+  userInfo: AccessTokenOptions,
+  roomName: string
+) {
   const at = new AccessToken(API_KEY, API_SECRET, userInfo);
-  at.ttl = '5m';
+  at.ttl = "5m";
   const grant: VideoGrant = {
     room: roomName,
     roomJoin: true,

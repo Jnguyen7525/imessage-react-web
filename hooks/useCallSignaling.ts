@@ -222,21 +222,386 @@
 //   }, [isInbox]);
 // }
 
+// "use client";
+
+// import React, { useEffect } from "react";
+// import { useCallStore } from "@/store/useCallStore";
+// import { useSearchParams, useRouter, usePathname } from "next/navigation";
+// import { onMessage } from "firebase/messaging";
+// import { messaging } from "@/lib/firebase/firebaseMessaging";
+
+// /**
+//  * useCallSignaling handles:
+//  * - Receiving FCM push messages (callee side)
+//  * - Navigating caller to room after acceptance
+//  * - Cleaning up outgoing call state
+//  * - Optional fallback polling for missed or declined calls
+//  */
+// export function useCallSignaling() {
+//   const router = useRouter();
+//   const pathname = usePathname();
+//   const searchParams = useSearchParams();
+//   const participantName = searchParams.get("user") ?? "anonymous";
+
+//   const setIncomingCall = useCallStore((s) => s.setIncomingCall);
+//   const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
+//   const outgoingCall = useCallStore((s) => s.outgoingCall);
+//   const clearOutgoingCall = useCallStore((s) => s.clearOutgoingCall);
+
+//   const isInbox = pathname === "/";
+//   const isRoom = pathname?.startsWith("/custom");
+
+//   const hasNavigatedRef = React.useRef(false); // ✅ Prevent duplicate router.push
+//   const hasIncomingCallRef = React.useRef(false); // ✅ Prevent duplicate incoming call UI
+
+//   // ✅ Listen for messages forwarded from service worker
+//   useEffect(() => {
+//     if (typeof window === "undefined" || !navigator.serviceWorker) return;
+
+//     const handleSWMessage = (event: MessageEvent) => {
+//       if (document.visibilityState === "visible") {
+//         console.log("👀 Tab is active — ignoring service worker message");
+//         return;
+//       }
+//       const raw = event.data || {};
+//       const type = raw.type || raw.data?.type;
+//       const payload = raw.payload || raw.data;
+
+//       if (!payload || payload.recipientId !== participantName) return;
+
+//       if (type === "ping") {
+//         console.log("✅ Ping received via service worker:", payload);
+//         return;
+//       }
+
+//       if (type === "call_accepted") {
+//         console.log("✅ handleCallAccepted triggered via service worker");
+//         console.log("Payload:", payload);
+
+//         const acceptedRoom = payload.roomName;
+//         const outgoingCall = useCallStore.getState().outgoingCall;
+//         const currentRoomName = searchParams.get("roomName");
+//         const alreadyInRoom = isRoom && currentRoomName === acceptedRoom;
+
+//         const liveKitUrl = outgoingCall?.liveKitUrl || payload.liveKitUrl;
+//         const callerToken = outgoingCall?.callerToken || payload.callerToken;
+//         const callerName = outgoingCall?.callerName || payload.callerName;
+//         const audioOnly =
+//           outgoingCall?.audioOnly ?? payload.audioOnly === "true";
+
+//         if (acceptedRoom && alreadyInRoom) {
+//           console.log("✅ Already in room — skipping navigation");
+//           clearOutgoingCall();
+//           return;
+//         }
+
+//         if (acceptedRoom && !alreadyInRoom && !hasNavigatedRef.current) {
+//           hasNavigatedRef.current = true;
+//           console.log("🚀 Navigating caller to room:", acceptedRoom);
+//           console.log("🚀 Navigating to:", {
+//             room: acceptedRoom,
+//             user: callerName,
+//             token: callerToken,
+//           });
+//           router.push(
+//             `/custom/?liveKitUrl=${liveKitUrl}&token=${callerToken}&roomName=${acceptedRoom}&user=${callerName}&audioOnly=${
+//               audioOnly ? "true" : "false"
+//             }`
+//           );
+//         }
+//         clearOutgoingCall();
+//       }
+
+//       if (type === "incoming_call") {
+//         console.log("✅ Incoming call received via service worker:", payload);
+
+//         if (hasIncomingCallRef.current) {
+//           console.warn("🚫 Duplicate incoming call — ignoring");
+//           return;
+//         }
+//         hasIncomingCallRef.current = true;
+
+//         let callerAvatar = null;
+//         try {
+//           callerAvatar = JSON.parse(payload.callerAvatar);
+//         } catch (err) {
+//           console.warn("Failed to parse callerAvatar from SW:", err);
+//         }
+
+//         setIncomingCall({
+//           callerName: payload.callerName,
+//           callerAvatar,
+//           roomName: payload.roomName,
+//           liveKitUrl: payload.liveKitUrl,
+//           audioOnly: payload.audioOnly === "true",
+//           callerToken: payload.callerToken, // ✅ Add this line
+//         });
+
+//         const audio = new Audio("/ringtone.mp3");
+//         audio.loop = true;
+//         audio.play();
+
+//         setTimeout(() => {
+//           console.log("Call timed out — clearing incoming call");
+//           clearIncomingCall();
+//           audio.pause();
+//         }, 30000);
+//       }
+//     };
+
+//     navigator.serviceWorker.addEventListener("message", handleSWMessage);
+//     return () => {
+//       navigator.serviceWorker.removeEventListener("message", handleSWMessage);
+//     };
+//   }, [participantName]);
+
+//   // ✅ Incoming call popup (callee side)
+//   // ✅ Listen for FCM push messages (callee side)
+//   // ✅ Foreground FCM message listener
+//   useEffect(() => {
+//     console.log("useCallSignaling mounted for:", participantName);
+//     if (!isInbox && !isRoom) return;
+//     if (!messaging) {
+//       console.warn("FCM messaging not initialized");
+//       return;
+//     }
+
+//     const handleIncomingCall = (payload: any) => {
+//       const recipientId = payload.data?.recipientId;
+//       console.log("FCM received:", payload.data);
+//       console.log("participantName:", participantName);
+//       console.log("recipientId:", recipientId);
+
+//       const data = payload.data;
+//       if (!data || data.recipientId !== participantName) return;
+
+//       if (data.type === "ping") {
+//         console.log("✅ Ping received via foreground FCM:", data);
+//         return;
+//       }
+
+//       if (data.type === "incoming_call") {
+//         if (hasIncomingCallRef.current) {
+//           console.warn("🚫 Duplicate incoming call — ignoring");
+//           return;
+//         }
+//         hasIncomingCallRef.current = true;
+
+//         const { roomName, callerName, liveKitUrl, audioOnly } = payload.data;
+
+//         let callerAvatar = null;
+//         try {
+//           callerAvatar = JSON.parse(payload.data.callerAvatar);
+//         } catch (err) {
+//           console.warn("Failed to parse callerAvatar:", err);
+//         }
+
+//         console.log("Incoming call from:", callerName, "Room:", roomName);
+
+//         setIncomingCall({
+//           callerName,
+//           callerAvatar,
+//           roomName,
+//           liveKitUrl,
+//           audioOnly: audioOnly === "true",
+//           callerToken: payload.callerToken, // ✅ Add this line
+//         });
+
+//         const audio = new Audio("/ringtone.mp3");
+//         audio.loop = true;
+//         audio.play();
+
+//         setTimeout(() => {
+//           console.log("Call timed out — clearing incoming call");
+//           clearIncomingCall();
+//           audio.pause();
+//         }, 30000);
+//       }
+//     };
+
+//     onMessage(messaging, handleIncomingCall);
+
+//     const checkIncomingCall = () => {
+//       const incomingCall = useCallStore.getState().incomingCall;
+//       if (incomingCall) {
+//         console.log("Incoming call still active:", incomingCall);
+//       }
+//     };
+
+//     window.addEventListener("focus", checkIncomingCall);
+//     return () => {
+//       window.removeEventListener("focus", checkIncomingCall);
+//     };
+//   }, [participantName, setIncomingCall, clearIncomingCall, isInbox, isRoom]);
+
+//   // ✅ Call accepted (caller side)
+//   // ✅ Navigate caller to room after callee accepts
+//   // ✅ Call accepted
+//   useEffect(() => {
+//     // if (!isInbox && !isRoom) return;
+//     if (!messaging) {
+//       console.warn("FCM messaging not initialized");
+//       return;
+//     }
+
+//     const handleCallAccepted = (payload: any) => {
+//       if (payload.data?.type !== "call_accepted") return;
+
+//       const recipientId = payload.data?.recipientId;
+//       if (recipientId !== participantName) {
+//         console.log("Ignoring call_accepted — not intended for this user");
+//         return;
+//       }
+
+//       const acceptedRoom = payload.data.roomName;
+//       const outgoingCall = useCallStore.getState().outgoingCall;
+//       const currentRoomName = searchParams.get("roomName");
+//       const alreadyInRoom = isRoom && currentRoomName === acceptedRoom;
+
+//       console.log("🔔 call_accepted received:", payload.data);
+//       console.log("🔍 outgoingCall:", outgoingCall);
+//       console.log("🔍 acceptedRoom:", acceptedRoom);
+//       console.log("🔍 currentRoomName:", currentRoomName);
+//       console.log("🔍 alreadyInRoom:", alreadyInRoom);
+
+//       if (acceptedRoom && alreadyInRoom) {
+//         console.log("✅ Already in room — skipping navigation");
+//         clearOutgoingCall();
+//         return;
+//       }
+
+//       // ✅ Use Zustand if available, fallback to payload
+//       const liveKitUrl = outgoingCall?.liveKitUrl || payload.data.liveKitUrl;
+//       const callerToken = outgoingCall?.callerToken || payload.data.callerToken;
+//       const callerName = outgoingCall?.callerName || payload.data.callerName;
+//       const audioOnly =
+//         outgoingCall?.audioOnly ?? payload.data.audioOnly === "true";
+
+//       if (acceptedRoom && !alreadyInRoom && !hasNavigatedRef.current) {
+//         hasNavigatedRef.current = true;
+//         console.log("🚀 Navigating caller to room:", acceptedRoom);
+//         console.log("🚀 Navigating to:", {
+//           room: acceptedRoom,
+//           user: callerName,
+//           token: callerToken,
+//         });
+//         router.push(
+//           `/custom/?liveKitUrl=${liveKitUrl}&token=${callerToken}&roomName=${acceptedRoom}&user=${callerName}&audioOnly=${
+//             audioOnly ? "true" : "false"
+//           }`
+//         );
+//       }
+//       clearOutgoingCall();
+//     };
+
+//     onMessage(messaging, handleCallAccepted);
+
+//     // window.addEventListener("focus", () => {
+//     //   const outgoingCall = useCallStore.getState().outgoingCall;
+//     //   if (outgoingCall) {
+//     //     console.log("Outgoing call still pending:", outgoingCall);
+//     //   }
+//     // });
+
+//     // return () => {
+//     //   window.removeEventListener("focus", () => {});
+//     // };
+//   }, [router, isInbox, isRoom, participantName, searchParams]);
+
+//   // ✅ Call declined (caller side)
+//   useEffect(() => {
+//     if (!isInbox && !isRoom) return;
+//     if (!messaging) {
+//       console.warn("FCM messaging not initialized");
+//       return;
+//     }
+
+//     const handleCallDeclined = (payload: any) => {
+//       if (payload.data?.type !== "call_declined") return;
+
+//       const recipientId = payload.data?.recipientId;
+//       if (recipientId !== participantName) {
+//         console.log("Ignoring call_declined — not intended for this user");
+//         return;
+//       }
+
+//       const declinedRoom = payload.data.roomName;
+//       const outgoingCall = useCallStore.getState().outgoingCall;
+
+//       if (declinedRoom && outgoingCall?.roomName === declinedRoom) {
+//         console.log("Call was declined — clearing outgoing call");
+//         useCallStore.getState().clearOutgoingCall();
+//       }
+//     };
+
+//     // ✅ Listen for call_declined push
+//     const unsubscribe = onMessage(messaging, handleCallDeclined);
+
+//     // ✅ Optional fallback on tab focus
+//     const checkCallDeclined = () => {
+//       const outgoingCall = useCallStore.getState().outgoingCall;
+//       if (outgoingCall) {
+//         console.log("Outgoing call still pending:", outgoingCall);
+//       }
+//     };
+
+//     window.addEventListener("focus", checkCallDeclined);
+//     return () => {
+//       window.removeEventListener("focus", checkCallDeclined);
+//       // FCM onMessage cleanup placeholder
+//     };
+//   }, [isInbox, participantName]);
+
+//   // ✅ Manual cancel (callee side)
+
+//   // ✅ Clear outgoing call when returning to inbox
+//   useEffect(() => {
+//     if (isInbox) {
+//       console.log("Returned to inbox — clearing outgoing call");
+//       clearOutgoingCall();
+//     }
+//   }, [isInbox]);
+
+//   useEffect(() => {
+//     const currentRoomName = searchParams.get("roomName");
+//     if (isRoom && currentRoomName) {
+//       console.log(
+//         "🧭 Currently in room:",
+//         currentRoomName,
+//         "as",
+//         participantName
+//       );
+//     }
+//   }, [pathname, searchParams, participantName]);
+
+//   // 🟡 Optional: fallback polling for missed call detection
+//   // useEffect(() => {
+//   //   const checkMissedCall = () => {
+//   //     const incomingCall = useCallStore.getState().incomingCall;
+//   //     const outgoingCall = useCallStore.getState().outgoingCall;
+
+//   //     if (incomingCall) {
+//   //       console.log("Incoming call still active:", incomingCall);
+//   //     }
+
+//   //     if (outgoingCall) {
+//   //       console.log("Outgoing call still pending:", outgoingCall);
+//   //     }
+//   //   };
+
+//   //   window.addEventListener("focus", checkMissedCall);
+//   //   return () => window.removeEventListener("focus", checkMissedCall);
+//   // }, []);
+// }
+
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useCallStore } from "@/store/useCallStore";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { onMessage } from "firebase/messaging";
 import { messaging } from "@/lib/firebase/firebaseMessaging";
 
-/**
- * useCallSignaling handles:
- * - Receiving FCM push messages (callee side)
- * - Navigating caller to room after acceptance
- * - Cleaning up outgoing call state
- * - Optional fallback polling for missed or declined calls
- */
 export function useCallSignaling() {
   const router = useRouter();
   const pathname = usePathname();
@@ -251,79 +616,143 @@ export function useCallSignaling() {
   const isInbox = pathname === "/";
   const isRoom = pathname?.startsWith("/custom");
 
-  // ✅ Listen for messages forwarded from service worker
+  // ✅ Guards to prevent duplicate navigation or call UI
+  const hasNavigatedRef = React.useRef(false);
+  const hasIncomingCallRef = React.useRef(false);
+
+  // ✅ Shared handler for incoming calls (from FCM or service worker)
+  const handleIncomingCall = (payload: any, source: "fcm" | "sw") => {
+    // if (hasIncomingCallRef.current) {
+    //   console.warn("🚫 Duplicate incoming call — ignoring");
+    //   return;
+    // }
+    // hasIncomingCallRef.current = true;
+    const currentIncoming = useCallStore.getState().incomingCall;
+    console.log("🔍 hasIncomingCallRef:", hasIncomingCallRef.current);
+    console.log(
+      "🔍 currentIncomingCall:",
+      useCallStore.getState().incomingCall
+    );
+    if (
+      currentIncoming &&
+      currentIncoming.roomName === payload.roomName &&
+      currentIncoming.callerName === payload.callerName
+    ) {
+      console.warn("🚫 Duplicate incoming call — ignoring");
+      return;
+    }
+
+    // ✅ Fresh call — allow it
+    hasIncomingCallRef.current = true;
+
+    if (!payload || payload.recipientId !== participantName) return;
+
+    console.log(`✅ Incoming call received via ${source}:`, payload);
+
+    let callerAvatar = null;
+    try {
+      callerAvatar = JSON.parse(payload.callerAvatar);
+    } catch (err) {
+      console.warn("Failed to parse callerAvatar:", err);
+    }
+
+    setIncomingCall({
+      callerName: payload.callerName,
+      callerAvatar,
+      roomName: payload.roomName,
+      liveKitUrl: payload.liveKitUrl,
+      audioOnly: payload.audioOnly === "true",
+      callerToken: payload.callerToken,
+    });
+
+    // ✅ Only play ringtone if tab is visible
+    if (document.visibilityState === "visible") {
+      const audio = new Audio("/ringtone.mp3");
+      audio.loop = true;
+      audio.play();
+
+      setTimeout(() => {
+        console.log("⏱️ Call timed out — clearing incoming call");
+        clearIncomingCall();
+        audio.pause();
+      }, 30000);
+    }
+  };
+
+  // ✅ Shared handler for call_accepted (from FCM or service worker)
+  const handleCallAccepted = (payload: any, source: "fcm" | "sw") => {
+    if (!payload || payload.recipientId !== participantName) return;
+    const isCaller = outgoingCall?.callerName === participantName;
+
+    if (!isCaller) {
+      console.log("🚫 Not the caller — skipping navigation");
+      return;
+    }
+
+    console.log(`✅ call_accepted received via ${source}:`, payload);
+
+    const acceptedRoom = payload.roomName;
+    const currentRoomName = searchParams.get("roomName");
+    const alreadyInRoom = isRoom && currentRoomName === acceptedRoom;
+
+    const liveKitUrl = outgoingCall?.liveKitUrl || payload.liveKitUrl;
+    const callerToken = outgoingCall?.callerToken || payload.callerToken;
+    const callerName = outgoingCall?.callerName || payload.callerName;
+    const audioOnly = outgoingCall?.audioOnly ?? payload.audioOnly === "true";
+
+    if (acceptedRoom && alreadyInRoom) {
+      console.log("✅ Already in room — skipping navigation");
+      clearOutgoingCall();
+      return;
+    }
+
+    if (
+      acceptedRoom &&
+      !alreadyInRoom &&
+      !hasNavigatedRef.current &&
+      isCaller
+    ) {
+      hasNavigatedRef.current = true;
+      console.log("🚀 Navigating to:", {
+        room: acceptedRoom,
+        user: callerName,
+        token: callerToken,
+      });
+      router.push(
+        `/custom/?liveKitUrl=${liveKitUrl}&token=${callerToken}&roomName=${acceptedRoom}&user=${callerName}&audioOnly=${
+          audioOnly ? "true" : "false"
+        }`
+      );
+    }
+
+    clearOutgoingCall();
+  };
+
+  // ✅ Service worker listener (only fires when tab is not visible)
   useEffect(() => {
     if (typeof window === "undefined" || !navigator.serviceWorker) return;
 
     const handleSWMessage = (event: MessageEvent) => {
+      if (document.visibilityState === "visible") {
+        console.log("👀 Tab is active — ignoring service worker message");
+        return;
+      }
+
       const raw = event.data || {};
       const type = raw.type || raw.data?.type;
       const payload = raw.payload || raw.data;
 
-      if (!payload || payload.recipientId !== participantName) return;
-
       if (type === "ping") {
-        console.log("✅ Ping received via service worker:", payload);
+        console.log("✅ Ping via service worker:", payload);
         return;
       }
 
-      if (type === "call_accepted") {
-        console.log("✅ handleCallAccepted triggered via service worker");
-        console.log("Payload:", payload);
-
-        const acceptedRoom = payload.roomName;
-        const outgoingCall = useCallStore.getState().outgoingCall;
-        const currentRoomName = searchParams.get("roomName");
-        const alreadyInRoom = isRoom && currentRoomName === acceptedRoom;
-
-        const liveKitUrl = outgoingCall?.liveKitUrl || payload.liveKitUrl;
-        const callerToken = outgoingCall?.callerToken || payload.callerToken;
-        const callerName = outgoingCall?.callerName || payload.callerName;
-        const audioOnly =
-          outgoingCall?.audioOnly ?? payload.audioOnly === "true";
-
-        if (acceptedRoom) {
-          if (!alreadyInRoom) {
-            console.log("🚀 Navigating caller to room:", acceptedRoom);
-            router.push(
-              `/custom/?liveKitUrl=${liveKitUrl}&token=${callerToken}&roomName=${acceptedRoom}&user=${callerName}&audioOnly=${
-                audioOnly ? "true" : "false"
-              }`
-            );
-          }
-
-          useCallStore.getState().clearOutgoingCall();
-        }
+      if (type === "incoming_call") {
+        handleIncomingCall(payload, "sw");
       }
 
-      if (type === "incoming_call") {
-        console.log("✅ Incoming call received via service worker:", payload);
-
-        let callerAvatar = null;
-        try {
-          callerAvatar = JSON.parse(payload.callerAvatar);
-        } catch (err) {
-          console.warn("Failed to parse callerAvatar from SW:", err);
-        }
-
-        setIncomingCall({
-          callerName: payload.callerName,
-          callerAvatar,
-          roomName: payload.roomName,
-          liveKitUrl: payload.liveKitUrl,
-          audioOnly: payload.audioOnly === "true",
-          callerToken: payload.callerToken, // ✅ Add this line
-        });
-
-        const audio = new Audio("/ringtone.mp3");
-        audio.loop = true;
-        audio.play();
-
-        setTimeout(() => {
-          console.log("Call timed out — clearing incoming call");
-          clearIncomingCall();
-          audio.pause();
-        }, 30000);
+      if (type === "call_accepted") {
+        handleCallAccepted(payload, "sw");
       }
     };
 
@@ -333,216 +762,87 @@ export function useCallSignaling() {
     };
   }, [participantName]);
 
-  // ✅ Incoming call popup (callee side)
-  // ✅ Listen for FCM push messages (callee side)
-  // ✅ Foreground FCM message listener
+  // ✅ Foreground FCM listener
   useEffect(() => {
-    console.log("useCallSignaling mounted for:", participantName);
-    if (!isInbox && !isRoom) return;
     if (!messaging) {
       console.warn("FCM messaging not initialized");
       return;
     }
 
-    const handleIncomingCall = (payload: any) => {
-      const recipientId = payload.data?.recipientId;
-      console.log("FCM received:", payload.data);
-      console.log("participantName:", participantName);
-      console.log("recipientId:", recipientId);
+    const handleFCM = (payload: any) => {
+      const data = payload.data;
+      if (!data || data.recipientId !== participantName) return;
 
-      if (recipientId !== participantName) {
-        console.log("Ignoring FCM message — not intended for this user");
+      if (data.type === "ping") {
+        console.log("✅ Ping via FCM:", data);
         return;
       }
 
-      if (payload.data?.type === "ping") {
-        console.log("✅ Ping received via foreground FCM:", payload.data);
-        return;
+      if (data.type === "incoming_call") {
+        handleIncomingCall(data, "fcm");
       }
 
-      if (payload.data?.type === "incoming_call") {
-        const { roomName, callerName, liveKitUrl, audioOnly } = payload.data;
+      if (data.type === "call_accepted") {
+        handleCallAccepted(data, "fcm");
+      }
 
-        let callerAvatar = null;
-        try {
-          callerAvatar = JSON.parse(payload.data.callerAvatar);
-        } catch (err) {
-          console.warn("Failed to parse callerAvatar:", err);
+      if (data.type === "call_declined") {
+        const declinedRoom = data.roomName;
+        const currentOutgoing = useCallStore.getState().outgoingCall;
+
+        if (declinedRoom && currentOutgoing?.roomName === declinedRoom) {
+          console.log("❌ Call was declined — clearing outgoing call");
+          clearOutgoingCall();
         }
-
-        console.log("Incoming call from:", callerName, "Room:", roomName);
-
-        setIncomingCall({
-          callerName,
-          callerAvatar,
-          roomName,
-          liveKitUrl,
-          audioOnly: audioOnly === "true",
-          callerToken: payload.callerToken, // ✅ Add this line
-        });
-
-        const audio = new Audio("/ringtone.mp3");
-        audio.loop = true;
-        audio.play();
-
-        setTimeout(() => {
-          console.log("Call timed out — clearing incoming call");
-          clearIncomingCall();
-          audio.pause();
-        }, 30000);
       }
     };
 
-    onMessage(messaging, handleIncomingCall);
+    onMessage(messaging, handleFCM);
 
-    const checkIncomingCall = () => {
-      const incomingCall = useCallStore.getState().incomingCall;
-      if (incomingCall) {
-        console.log("Incoming call still active:", incomingCall);
-      }
-    };
-
-    window.addEventListener("focus", checkIncomingCall);
-    return () => {
-      window.removeEventListener("focus", checkIncomingCall);
-    };
-  }, [participantName, setIncomingCall, clearIncomingCall, isInbox, isRoom]);
-
-  // ✅ Call accepted (caller side)
-  // ✅ Navigate caller to room after callee accepts
-  // ✅ Call accepted
-  useEffect(() => {
-    // if (!isInbox && !isRoom) return;
-    if (!messaging) {
-      console.warn("FCM messaging not initialized");
-      return;
-    }
-
-    const handleCallAccepted = (payload: any) => {
-      if (payload.data?.type !== "call_accepted") return;
-
-      const recipientId = payload.data?.recipientId;
-      if (recipientId !== participantName) {
-        console.log("Ignoring call_accepted — not intended for this user");
-        return;
-      }
-
-      const acceptedRoom = payload.data.roomName;
-      const outgoingCall = useCallStore.getState().outgoingCall;
-      const currentRoomName = searchParams.get("roomName");
-      const alreadyInRoom = isRoom && currentRoomName === acceptedRoom;
-
-      console.log("🔔 call_accepted received:", payload.data);
-      console.log("🔍 outgoingCall:", outgoingCall);
-      console.log("🔍 acceptedRoom:", acceptedRoom);
-      console.log("🔍 currentRoomName:", currentRoomName);
-      console.log("🔍 alreadyInRoom:", alreadyInRoom);
-
-      // ✅ Use Zustand if available, fallback to payload
-      const liveKitUrl = outgoingCall?.liveKitUrl || payload.data.liveKitUrl;
-      const callerToken = outgoingCall?.callerToken || payload.data.callerToken;
-      const callerName = outgoingCall?.callerName || payload.data.callerName;
-      const audioOnly =
-        outgoingCall?.audioOnly ?? payload.data.audioOnly === "true";
-
-      if (acceptedRoom) {
-        if (!alreadyInRoom) {
-          console.log("🚀 Navigating caller to room:", acceptedRoom);
-          router.push(
-            `/custom/?liveKitUrl=${liveKitUrl}&token=${callerToken}&roomName=${acceptedRoom}&user=${callerName}&audioOnly=${
-              audioOnly ? "true" : "false"
-            }`
-          );
-        }
-
-        useCallStore.getState().clearOutgoingCall();
-      }
-    };
-
-    onMessage(messaging, handleCallAccepted);
-
-    window.addEventListener("focus", () => {
-      const outgoingCall = useCallStore.getState().outgoingCall;
-      if (outgoingCall) {
-        console.log("Outgoing call still pending:", outgoingCall);
-      }
-    });
-
-    return () => {
-      window.removeEventListener("focus", () => {});
-    };
-  }, [router, isInbox, isRoom, participantName, searchParams]);
-
-  // ✅ Call declined (caller side)
-  useEffect(() => {
-    if (!isInbox && !isRoom) return;
-    if (!messaging) {
-      console.warn("FCM messaging not initialized");
-      return;
-    }
-
-    const handleCallDeclined = (payload: any) => {
-      if (payload.data?.type !== "call_declined") return;
-
-      const recipientId = payload.data?.recipientId;
-      if (recipientId !== participantName) {
-        console.log("Ignoring call_declined — not intended for this user");
-        return;
-      }
-
-      const declinedRoom = payload.data.roomName;
-      const outgoingCall = useCallStore.getState().outgoingCall;
-
-      if (declinedRoom && outgoingCall?.roomName === declinedRoom) {
-        console.log("Call was declined — clearing outgoing call");
-        useCallStore.getState().clearOutgoingCall();
-      }
-    };
-
-    // ✅ Listen for call_declined push
-    const unsubscribe = onMessage(messaging, handleCallDeclined);
-
-    // ✅ Optional fallback on tab focus
+    // ✅ Optional: log pending call on tab focus
     const checkCallDeclined = () => {
-      const outgoingCall = useCallStore.getState().outgoingCall;
-      if (outgoingCall) {
-        console.log("Outgoing call still pending:", outgoingCall);
+      const currentOutgoing = useCallStore.getState().outgoingCall;
+      if (currentOutgoing) {
+        console.log("📞 Outgoing call still pending:", currentOutgoing);
       }
     };
 
     window.addEventListener("focus", checkCallDeclined);
     return () => {
       window.removeEventListener("focus", checkCallDeclined);
-      // FCM onMessage cleanup placeholder
     };
-  }, [isInbox, participantName]);
-
-  // ✅ Manual cancel (callee side)
+  }, [participantName, outgoingCall, router, searchParams]);
 
   // ✅ Clear outgoing call when returning to inbox
   useEffect(() => {
     if (isInbox) {
-      console.log("Returned to inbox — clearing outgoing call");
+      console.log("🏠 Returned to inbox — clearing outgoing call");
       clearOutgoingCall();
     }
   }, [isInbox]);
 
-  // 🟡 Optional: fallback polling for missed call detection
-  // useEffect(() => {
-  //   const checkMissedCall = () => {
-  //     const incomingCall = useCallStore.getState().incomingCall;
-  //     const outgoingCall = useCallStore.getState().outgoingCall;
+  // ✅ Log current room state on mount
+  useEffect(() => {
+    const currentRoomName = searchParams.get("roomName");
+    if (isRoom && currentRoomName) {
+      console.log(
+        "🧭 Currently in room:",
+        currentRoomName,
+        "as",
+        participantName
+      );
+    }
+  }, [pathname, searchParams, participantName]);
 
-  //     if (incomingCall) {
-  //       console.log("Incoming call still active:", incomingCall);
-  //     }
+  // ✅ Log signaling mount for debugging
+  useEffect(() => {
+    console.log("📡 useCallSignaling mounted for:", participantName);
+  }, [participantName]);
 
-  //     if (outgoingCall) {
-  //       console.log("Outgoing call still pending:", outgoingCall);
-  //     }
-  //   };
-
-  //   window.addEventListener("focus", checkMissedCall);
-  //   return () => window.removeEventListener("focus", checkMissedCall);
-  // }, []);
+  useEffect(() => {
+    const currentRoomName = searchParams.get("roomName");
+    if (isRoom && currentRoomName) {
+      console.log("🧭 Entered room:", currentRoomName, "as", participantName);
+    }
+  }, [pathname, searchParams, participantName]);
 }

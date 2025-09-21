@@ -372,6 +372,9 @@ export default function CallUIOverlay() {
     callerName: string;
   }>(null);
 
+  const hasJoinedRef = React.useRef(false); // ✅ Prevent duplicate joins
+  const hasNavigatedRef = React.useRef(false);
+
   // 🔄 Join a LiveKit room
   const joinRoom = async (
     roomName: string,
@@ -379,6 +382,12 @@ export default function CallUIOverlay() {
     audioOnly: boolean,
     callerName: string
   ) => {
+    if (hasNavigatedRef.current) {
+      console.warn("🚫 Already navigated — skipping joinRoom");
+      return;
+    }
+    hasNavigatedRef.current = true;
+
     if (room && room.state === "connected") {
       console.log("Disconnecting from current room:", room.name);
       await room.disconnect(); // ✅ Leave current room cleanly
@@ -390,6 +399,12 @@ export default function CallUIOverlay() {
     );
     const data = await res.json();
 
+    console.log(
+      "🚀 Navigating to room:",
+      roomName,
+      "with identity:",
+      participantName
+    );
     // ✅ Navigate to the room — no need for localStorage
     router.push(
       `/custom/?liveKitUrl=${data.serverUrl}&token=${
@@ -401,11 +416,6 @@ export default function CallUIOverlay() {
   };
 
   // 🧹 Clear room context if not on /custom
-  // React.useEffect(() => {
-  //   if (!pathname.startsWith("/custom")) {
-  //     useRoomBridgeStore.getState().setRoom(null);
-  //   }
-  // }, [pathname]);
   React.useEffect(() => {
     if (!pathname.startsWith("/custom")) {
       setTimeout(() => {
@@ -424,23 +434,77 @@ export default function CallUIOverlay() {
     };
   }, []);
 
-  React.useEffect(() => {
-    console.log("Incoming call state:", incomingCall);
-  }, [incomingCall]);
-
-  React.useEffect(() => {
-    console.log("Outgoing call state:", outgoingCall);
-  }, [outgoingCall]);
-
   // ✅ Incoming call UI
   if (incomingCall) {
     const currentRoomName = searchParams.get("roomName");
     const isAlreadyInRoom = currentRoomName && pathname.startsWith("/custom");
     const isDifferentRoom = currentRoomName !== incomingCall.roomName;
 
+    // const handleAccept = async () => {
+    //   if (hasJoinedRef.current) {
+    //     console.warn("🚫 Already joined — skipping");
+    //     return;
+    //   }
+    //   hasJoinedRef.current = true;
+
+    //   if (isAlreadyInRoom && isDifferentRoom) {
+    //     // 🧠 Prompt user to switch rooms
+    //     setPendingCallData({
+    //       roomName: incomingCall.roomName,
+    //       liveKitUrl: incomingCall.liveKitUrl,
+    //       audioOnly: incomingCall.audioOnly ?? false,
+    //       callerName: incomingCall.callerName,
+    //     });
+    //     setShowRoomSwitchModal(true);
+    //     return;
+    //   }
+
+    //   await joinRoom(
+    //     incomingCall.roomName,
+    //     incomingCall.liveKitUrl,
+    //     incomingCall.audioOnly ?? false,
+    //     incomingCall.callerName
+    //   );
+
+    //   // ✅ Notify caller via FCM
+    //   await fetch("/api/send-call-accepted", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       callerId: incomingCall.callerName,
+    //       roomName: incomingCall.roomName,
+    //       liveKitUrl: incomingCall.liveKitUrl,
+    //       callerToken: incomingCall.callerToken, // You may need to store this in incomingCall
+    //       callerName: incomingCall.callerName,
+    //       audioOnly: incomingCall.audioOnly,
+    //     }),
+    //   });
+
+    //   clearIncomingCall();
+    // };
+
     const handleAccept = async () => {
-      if (isAlreadyInRoom && isDifferentRoom) {
-        // 🧠 Prompt user to switch rooms
+      if (hasJoinedRef.current) {
+        console.warn("🚫 Already joined — skipping");
+        return;
+      }
+      hasJoinedRef.current = true;
+
+      const currentRoomName = searchParams.get("roomName");
+      const isAlreadyInRoom =
+        pathname.startsWith("/custom") &&
+        currentRoomName === incomingCall.roomName;
+
+      if (isAlreadyInRoom) {
+        console.log("✅ Already in correct room — skipping navigation");
+        clearIncomingCall();
+        return;
+      }
+
+      if (
+        pathname.startsWith("/custom") &&
+        currentRoomName !== incomingCall.roomName
+      ) {
         setPendingCallData({
           roomName: incomingCall.roomName,
           liveKitUrl: incomingCall.liveKitUrl,
@@ -458,7 +522,6 @@ export default function CallUIOverlay() {
         incomingCall.callerName
       );
 
-      // ✅ Notify caller via FCM
       await fetch("/api/send-call-accepted", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -466,7 +529,7 @@ export default function CallUIOverlay() {
           callerId: incomingCall.callerName,
           roomName: incomingCall.roomName,
           liveKitUrl: incomingCall.liveKitUrl,
-          callerToken: incomingCall.callerToken, // You may need to store this in incomingCall
+          callerToken: incomingCall.callerToken,
           callerName: incomingCall.callerName,
           audioOnly: incomingCall.audioOnly,
         }),
@@ -482,6 +545,8 @@ export default function CallUIOverlay() {
           callerAvatar={incomingCall.callerAvatar}
           onAccept={handleAccept}
           onReject={async () => {
+            console.log("❌ Call manually declined");
+
             // ✅ Notify caller via FCM
             await fetch("/api/send-call-declined", {
               method: "POST",
@@ -510,6 +575,8 @@ export default function CallUIOverlay() {
                 <button
                   className="px-4 py-2 bg-zinc-700 rounded hover:bg-zinc-600"
                   onClick={() => {
+                    console.log("🚫 Room switch canceled");
+
                     setShowRoomSwitchModal(false);
                     clearIncomingCall();
                   }}
@@ -519,6 +586,8 @@ export default function CallUIOverlay() {
                 <button
                   className="px-4 py-2 bg-purple-600 rounded hover:bg-purple-500"
                   onClick={async () => {
+                    console.log("✅ Switching to new room");
+
                     await joinRoom(
                       pendingCallData.roomName,
                       pendingCallData.liveKitUrl,
