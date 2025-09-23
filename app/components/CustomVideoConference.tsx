@@ -118,9 +118,39 @@ export function CustomVideoConference({
   const router = useRouter();
 
   const room = useRoomContext();
+
+  // React.useEffect(() => {
+  //   useRoomBridgeStore.getState().setRoom(room);
+  // }, [room]);
+  // React.useEffect(() => {
+  //   console.log("🧭 RoomBridgeStore updated with room:", room);
+  // }, [room]);
+
+  // React.useEffect(() => {
+  //   if (room && room.state === "connected") {
+  //     const room = useRoomBridgeStore((s) => s.room);
+  //     console.log("🧭 RoomBridgeStore old room:", room);
+  //   }
+  // }, [room?.state]);
   React.useEffect(() => {
-    useRoomBridgeStore.getState().setRoom(room);
+    if (room) {
+      const previousRoom = useRoomBridgeStore.getState().room;
+      console.log("🧭 RoomBridgeStore old room:", previousRoom);
+      useRoomBridgeStore.getState().setRoom(room);
+      console.log("🧭 RoomBridgeStore updated with new room:", room);
+    }
   }, [room]);
+
+  React.useEffect(() => {
+    // ✅ Reset layout and track state when room changes
+    layoutContext.pin.dispatch?.({ msg: "clear_pin" });
+    lastAutoFocusedScreenShareTrack.current = null;
+
+    // ✅ Clear stale room context (if needed)
+    useRoomBridgeStore.getState().setRoom(null);
+
+    log.debug("🧹 Cleared layout state on room switch:", room.name);
+  }, [room.name]);
 
   const participants = useParticipants();
   const roomName = room.name;
@@ -238,20 +268,6 @@ export function CustomVideoConference({
     }
   };
 
-  // React.useEffect(() => {
-  //   const onDisconnect = () => {
-  //     toast("You’ve been removed from the room", { icon: "🚫" });
-  //     // router.push("/"); // ✅ Send user back to inbox or main view
-  //     router.push(`/?user=${encodeURIComponent(participantName)}`);
-  //   };
-
-  //   room.on(RoomEvent.Disconnected, onDisconnect);
-
-  //   return () => {
-  //     room.off(RoomEvent.Disconnected, onDisconnect);
-  //   };
-  // }, [room]);
-
   React.useEffect(() => {
     const onDisconnect = () => {
       const identity = room.localParticipant.identity;
@@ -279,21 +295,17 @@ export function CustomVideoConference({
     wasKickedRef.current = false;
   }, [room.name]);
 
-  // React.useEffect(() => {
-  //   return () => {
-  //     useCallStore.getState().clearOutgoingCall();
-  //   };
-  // }, []);
-
-  //   useWarnAboutMissingStyles();
-
   React.useEffect(() => {
-    if (cameraEnabled === false) {
+    if (
+      cameraEnabled === false &&
+      room.localParticipant &&
+      room?.state === "connected"
+    ) {
       room.localParticipant.setCameraEnabled(false).catch(() => {
         toast.error("Failed to disable camera");
       });
     }
-  }, [cameraEnabled, room]);
+  }, [cameraEnabled, room?.state]);
 
   return (
     <div className="lk-video-conference " {...props}>

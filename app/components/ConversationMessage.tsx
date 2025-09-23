@@ -86,7 +86,7 @@ type ConversationMessageProps = {
 };
 
 export const ConversationMessage = ({ data }: ConversationMessageProps) => {
-  console.log("ConversationMessage data:", data);
+  // console.log("ConversationMessage data:", data);
   const isSender = data.amISender;
   const Curl = isSender ? CurlRight : CurlLeft;
 

@@ -91,9 +91,9 @@ export function VideoConferenceClientImpl(props: {
   // }, [room, props.liveKitUrl, props.token, connectOptions, e2eeSetupComplete]);
   // !fixes the error  Element not part of the array: bob__dwo9_camera_placeholder not in alice__dwo9_camera_TR_VCPxWn3AhBKg7b,bob__dwo9_camera_TR_VCjLRxKtFqEkBZ
   useEffect(() => {
-    // if (e2eeSetupComplete) {
-    if (e2eeSetupComplete && !hasConnectedRef.current) {
-      hasConnectedRef.current = true;
+    if (e2eeSetupComplete) {
+      // if (e2eeSetupComplete && !hasConnectedRef.current) {
+      //   hasConnectedRef.current = true;
 
       room
         .connect(props.liveKitUrl, props.token, connectOptions)
@@ -167,6 +167,12 @@ export function VideoConferenceClientImpl(props: {
       props.participantName
     );
   }, [props.participantName]);
+
+  useEffect(() => {
+    return () => {
+      room.disconnect();
+    };
+  }, []);
 
   return (
     <div className="lk-room-container">

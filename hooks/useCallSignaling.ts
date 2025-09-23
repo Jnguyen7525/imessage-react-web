@@ -622,11 +622,6 @@ export function useCallSignaling() {
 
   // ✅ Shared handler for incoming calls (from FCM or service worker)
   const handleIncomingCall = (payload: any, source: "fcm" | "sw") => {
-    // if (hasIncomingCallRef.current) {
-    //   console.warn("🚫 Duplicate incoming call — ignoring");
-    //   return;
-    // }
-    // hasIncomingCallRef.current = true;
     const currentIncoming = useCallStore.getState().incomingCall;
     console.log("🔍 hasIncomingCallRef:", hasIncomingCallRef.current);
     console.log(
@@ -684,10 +679,11 @@ export function useCallSignaling() {
     if (!payload || payload.recipientId !== participantName) return;
     const isCaller = outgoingCall?.callerName === participantName;
 
-    if (!isCaller) {
-      console.log("🚫 Not the caller — skipping navigation");
-      return;
-    }
+    // if (!isCaller) {
+    //   console.log(`🚫 Not the caller ${outgoingCall}— skipping navigation`);
+    //   console.log(`🚫 Not the caller ${payload}— skipping navigation`);
+    //   return;
+    // }
 
     console.log(`✅ call_accepted received via ${source}:`, payload);
 
@@ -702,17 +698,16 @@ export function useCallSignaling() {
 
     if (acceptedRoom && alreadyInRoom) {
       console.log("✅ Already in room — skipping navigation");
-      clearOutgoingCall();
+      // clearOutgoingCall();
       return;
     }
 
     if (
       acceptedRoom &&
       !alreadyInRoom &&
-      !hasNavigatedRef.current &&
+      // !hasNavigatedRef.current &&
       isCaller
     ) {
-      hasNavigatedRef.current = true;
       console.log("🚀 Navigating to:", {
         room: acceptedRoom,
         user: callerName,
@@ -754,6 +749,29 @@ export function useCallSignaling() {
       if (type === "call_accepted") {
         handleCallAccepted(payload, "sw");
       }
+
+      if (type === "call_declined") {
+        const declinedRoom = payload.roomName;
+        const currentIncoming = useCallStore.getState().incomingCall;
+        const currentOutgoing = useCallStore.getState().outgoingCall;
+
+        // ✅ If this tab is the callee and the incoming call matches
+        if (declinedRoom && currentIncoming?.roomName === declinedRoom) {
+          console.log("❌ Caller canceled the call — clearing incoming call");
+          clearIncomingCall();
+        }
+
+        // ✅ If this tab is the caller and the outgoing call matches
+        if (declinedRoom && currentOutgoing?.roomName === declinedRoom) {
+          console.log("❌ Call was declined — clearing outgoing call");
+          clearOutgoingCall();
+        }
+
+        // ✅ Optional: log manual cancel flag
+        // if (payload.manualCancel) {
+        //   console.log("🛑 Call canceled manually by caller");
+        // }
+      }
     };
 
     navigator.serviceWorker.addEventListener("message", handleSWMessage);
@@ -789,11 +807,24 @@ export function useCallSignaling() {
       if (data.type === "call_declined") {
         const declinedRoom = data.roomName;
         const currentOutgoing = useCallStore.getState().outgoingCall;
+        const currentIncoming = useCallStore.getState().incomingCall;
 
+        // ✅ Caller canceled — clear incoming call in callee's tab
+        if (declinedRoom && currentIncoming?.roomName === declinedRoom) {
+          console.log("❌ Caller canceled the call — clearing incoming call");
+          clearIncomingCall();
+        }
+
+        // ✅ Callee declined — clear outgoing call in caller's tab
         if (declinedRoom && currentOutgoing?.roomName === declinedRoom) {
           console.log("❌ Call was declined — clearing outgoing call");
           clearOutgoingCall();
         }
+
+        // if (declinedRoom && currentOutgoing?.roomName === declinedRoom) {
+        //   console.log("❌ Call was declined — clearing outgoing call");
+        //   clearOutgoingCall();
+        // }
       }
     };
 
