@@ -132,14 +132,14 @@ export function CustomVideoConference({
   //     console.log("🧭 RoomBridgeStore old room:", room);
   //   }
   // }, [room?.state]);
-  React.useEffect(() => {
-    if (room) {
-      const previousRoom = useRoomBridgeStore.getState().room;
-      console.log("🧭 RoomBridgeStore old room:", previousRoom);
-      useRoomBridgeStore.getState().setRoom(room);
-      console.log("🧭 RoomBridgeStore updated with new room:", room);
-    }
-  }, [room]);
+  // React.useEffect(() => {
+  //   if (room) {
+  //     const previousRoom = useRoomBridgeStore.getState().room;
+  //     console.log("🧭 RoomBridgeStore old room:", previousRoom);
+  //     useRoomBridgeStore.getState().setRoom(room);
+  //     console.log("🧭 RoomBridgeStore updated with new room:", room);
+  //   }
+  // }, [room]);
 
   React.useEffect(() => {
     // ✅ Reset layout and track state when room changes
@@ -147,9 +147,39 @@ export function CustomVideoConference({
     lastAutoFocusedScreenShareTrack.current = null;
 
     // ✅ Clear stale room context (if needed)
-    useRoomBridgeStore.getState().setRoom(null);
+    // useRoomBridgeStore.getState().setRoom(null);
 
     log.debug("🧹 Cleared layout state on room switch:", room.name);
+  }, [room.name]);
+
+  // React.useEffect(() => {
+  //   if (room) {
+  //     const previousRoom = useRoomBridgeStore.getState().room;
+  //     console.log("🧭 RoomBridgeStore old room:", previousRoom);
+  //     useRoomBridgeStore.getState().setRoom(room);
+  //     console.log("🧭 RoomBridgeStore updated with new room:", room);
+  //   }
+  // }, [room]);
+  React.useEffect(() => {
+    if (room && room.state === "connected") {
+      const previousRoom = useRoomBridgeStore.getState().room;
+      console.log(
+        "🧭 RoomBridgeStore old room:",
+        previousRoom?.name,
+        previousRoom?.state
+      );
+      useRoomBridgeStore.getState().setRoom(room);
+      console.log(
+        "🧭 RoomBridgeStore updated with new room:",
+        room.name,
+        room.state
+      );
+    }
+  }, [room?.state]);
+
+  React.useEffect(() => {
+    // useRoomBridgeStore.getState().setRoom(null);
+    console.log("🧹 Cleared layout state on room switch:", room.name);
   }, [room.name]);
 
   const participants = useParticipants();

@@ -168,8 +168,10 @@ export function VideoConferenceClientImpl(props: {
     );
   }, [props.participantName]);
 
+  // !clean up room on unmount
   useEffect(() => {
     return () => {
+      console.log("🧍 Unmounting VideoConferenceClientImpl");
       room.disconnect();
     };
   }, []);

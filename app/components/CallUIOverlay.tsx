@@ -350,6 +350,7 @@ import { OutgoingCallStatus } from "./OutgoingCall";
 import { useCallSignaling } from "@/hooks/useCallSignaling";
 import React from "react";
 import { useRoomBridgeStore } from "@/store/useRoomBridgeStore";
+import { Room } from "livekit-client";
 
 export default function CallUIOverlay() {
   useCallSignaling(); // ✅ Listens for FCM messages and updates Zustand
@@ -375,20 +376,34 @@ export default function CallUIOverlay() {
 
   const hasJoinedRef = React.useRef(false); // ✅ Prevent duplicate joins
   const hasNavigatedRef = React.useRef(false);
+  const previousRoomRef = React.useRef<Room | null>(null);
+
+  React.useEffect(() => {
+    previousRoomRef.current = useRoomBridgeStore.getState().room;
+  }, [incomingCall]);
 
   // 🔄 Join a LiveKit room
   const joinRoom = async (
     roomName: string,
     liveKitUrl: string,
     audioOnly: boolean,
-    callerName: string
+    callerName: string,
+    oldRoom?: Room | null
   ) => {
-    // if (room && room.state === "connected") {
-    if (room) {
-      console.log("Disconnecting from current room:", room);
-      await room.disconnect(); // ✅ Leave current room cleanly
+    const currentRoom = useRoomBridgeStore.getState().room;
+    if (currentRoom && currentRoom.state === "connected") {
+      console.log("🔌 Disconnecting from previous room:", currentRoom);
+      await currentRoom.disconnect();
+    } else {
+      console.log("⚠️ No connected room to disconnect");
     }
-    console.log("old room:", room);
+
+    // if (room && room.state === "connected") {
+    // if (room) {
+    //   console.log("Disconnecting from current room:", room);
+    //   await room.disconnect(); // ✅ Leave current room cleanly
+    // }
+    console.log("old room:", currentRoom);
     console.log("Joining new room:", roomName, room);
     const res = await fetch(
       `/api/connection-details?roomName=${roomName}&participantName=${participantName}`
@@ -411,9 +426,24 @@ export default function CallUIOverlay() {
     );
   };
 
+  React.useEffect(() => {
+    const unsub = useRoomBridgeStore.subscribe((state) => {
+      const room = state.room;
+      console.log(
+        "📡 RoomBridgeStore updated in CallUIOverlay:",
+        room?.name,
+        room?.state,
+        room
+      );
+    });
+
+    return () => unsub();
+  }, []);
+
   // 🧹 Clear room context if not on /custom
   // React.useEffect(() => {
-  //   if (!pathname.startsWith("/custom")) {
+  //   // if (!pathname.startsWith("/custom")) {
+  //   if (pathname === "/") {
   //     setTimeout(() => {
   //       const currentRoom = useRoomBridgeStore.getState().room;
   //       if (currentRoom !== null) {
@@ -460,6 +490,22 @@ export default function CallUIOverlay() {
         }),
       });
 
+      console.log("📞 Incoming call accepted:");
+      console.log("🔍 Current pathname:", pathname);
+      console.log("🔍 Current roomName from URL:", currentRoomName);
+      console.log("🔍 Incoming call roomName:", incomingCall.roomName);
+      console.log("🔍 isAlreadyInRoom:", isAlreadyInRoom);
+      console.log("🔍 isDifferentRoom:", isDifferentRoom);
+
+      const currentRoom = useRoomBridgeStore.getState().room;
+      console.log(
+        "🔍 RoomBridgeStore current room:",
+        currentRoom?.name,
+        currentRoom?.state,
+        room,
+        currentRoom
+      );
+
       if (isAlreadyInRoom) {
         console.log("✅ Already in correct room — skipping navigation");
         clearIncomingCall();
@@ -486,6 +532,7 @@ export default function CallUIOverlay() {
 
       clearIncomingCall();
     };
+
     return (
       <>
         <IncomingCallPopup
@@ -540,7 +587,8 @@ export default function CallUIOverlay() {
                       pendingCallData.roomName,
                       pendingCallData.liveKitUrl,
                       pendingCallData.audioOnly,
-                      pendingCallData.callerName
+                      pendingCallData.callerName,
+                      useRoomBridgeStore.getState().room
                     );
 
                     // ✅ Notify caller before switching
