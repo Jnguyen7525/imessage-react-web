@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
- const { callerId, roomName, liveKitUrl, callerToken, callerName, audioOnly } =
-   body;
+  const { callerId, roomName, liveKitUrl, callerToken, callerName, audioOnly } =
+    body;
 
   const fcmToken = await getFCMTokenForUser(callerId);
   if (!fcmToken) {
@@ -15,11 +15,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  //   await sendFCM(fcmToken, {
-  //     type: "call_accepted",
-  //     roomName,
-  //     recipientId: callerId,
-  //   });
   await sendFCM(fcmToken, {
     type: "call_accepted",
     roomName,

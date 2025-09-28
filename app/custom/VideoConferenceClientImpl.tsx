@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  formatChatMessageLinks,
-  RoomContext,
-  VideoConference,
-} from "@livekit/components-react";
+import { formatChatMessageLinks, RoomContext } from "@livekit/components-react";
 import {
   ExternalE2EEKeyProvider,
   LogLevel,
@@ -17,7 +13,7 @@ import {
   type VideoCodec,
 } from "livekit-client";
 import { DebugMode } from "@/lib/Debug";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { KeyboardShortcuts } from "@/lib/KeyboardShortcuts";
 import { SettingsMenu } from "@/lib/SettingsMenu";
 import { useSetupE2EE } from "@/lib/useSetupE2EE";
@@ -38,8 +34,6 @@ export function VideoConferenceClientImpl(props: {
   const e2eeEnabled = !!(e2eePassphrase && worker);
 
   const [e2eeSetupComplete, setE2eeSetupComplete] = useState(false);
-
-  const hasConnectedRef = useRef(false);
 
   const roomOptions = useMemo((): RoomOptions => {
     return {
@@ -79,22 +73,9 @@ export function VideoConferenceClientImpl(props: {
     }
   }, [e2eeEnabled, e2eePassphrase, keyProvider, room, setE2eeSetupComplete]);
 
-  // useEffect(() => {
-  //   if (e2eeSetupComplete) {
-  //     room.connect(props.liveKitUrl, props.token, connectOptions).catch((error) => {
-  //       console.error(error);
-  //     });
-  //     room.localParticipant.enableCameraAndMicrophone().catch((error) => {
-  //       console.error(error);
-  //     });
-  //   }
-  // }, [room, props.liveKitUrl, props.token, connectOptions, e2eeSetupComplete]);
   // !fixes the error  Element not part of the array: bob__dwo9_camera_placeholder not in alice__dwo9_camera_TR_VCPxWn3AhBKg7b,bob__dwo9_camera_TR_VCjLRxKtFqEkBZ
   useEffect(() => {
     if (e2eeSetupComplete) {
-      // if (e2eeSetupComplete && !hasConnectedRef.current) {
-      //   hasConnectedRef.current = true;
-
       room
         .connect(props.liveKitUrl, props.token, connectOptions)
         .then(() => {
@@ -149,7 +130,6 @@ export function VideoConferenceClientImpl(props: {
         })
         .catch(console.error);
     }
-    // }, [e2eeSetupComplete, room, props.liveKitUrl, props.token, connectOptions]);
   }, [
     e2eeSetupComplete,
     room,
@@ -180,28 +160,8 @@ export function VideoConferenceClientImpl(props: {
     <div className="lk-room-container">
       <RoomContext.Provider value={room}>
         <KeyboardShortcuts />
-        {/* 👇 Sidebar with contacts */}
-        {/* <SidebarCallerPanel participantName={props.participantName} /> */}
-
-        {/* <VideoConference
-          chatMessageFormatter={formatChatMessageLinks}
-          SettingsComponent={
-            process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU === "true"
-              ? SettingsMenu
-              : undefined
-          }
-        /> */}
-        {/* <CustomVideoConference
-          chatMessageFormatter={formatChatMessageLinks}
-          SettingsComponent={
-            process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU === "true"
-              ? SettingsMenu
-              : undefined
-          }
-        /> */}
 
         <CustomVideoConference
-          // participantName={props.participantName}
           cameraEnabled={!props.audioOnly} // ✅ disables camera for audio-only calls
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={

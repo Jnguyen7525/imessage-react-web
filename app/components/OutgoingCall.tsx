@@ -12,12 +12,9 @@ export const OutgoingCallStatus = ({
 }: OutgoingCallStatusProps) => {
   const clearOutgoingCall = useCallStore((s) => s.clearOutgoingCall);
 
-  // const handleCancel = () => {
-  //   clearOutgoingCall();
-  //   localStorage.setItem("callDeclined", "manual-cancel"); // 👈 optional signal
-  // };
   const handleCancel = async () => {
     console.log("❌ Call manually declined by caller");
+
     // ✅ Notify callee via FCM
     await fetch("/api/send-call-declined", {
       method: "POST",
@@ -25,12 +22,11 @@ export const OutgoingCallStatus = ({
       body: JSON.stringify({
         callerId: calleeName, // 👈 this is actually the recipient
         roomName: useCallStore.getState().outgoingCall?.roomName,
-        manualCancel: false,
+        manualCancel: true,
       }),
     });
 
     clearOutgoingCall();
-    // localStorage.setItem("callDeclined", "manual-cancel"); // optional signal
   };
 
   return (

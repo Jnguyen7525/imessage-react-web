@@ -209,9 +209,9 @@ function Header() {
   );
 
   // 🔍 Debug: log selected contact
-  useEffect(() => {
-    console.log("Selected (via useMemo):", selectedConversation);
-  }, [selectedConversation]);
+  // useEffect(() => {
+  //   console.log("Selected (via useMemo):", selectedConversation);
+  // }, [selectedConversation]);
 
   // 📞 Start video call using FCM signaling
   const startMeeting = async () => {

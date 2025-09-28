@@ -15,7 +15,6 @@ export const IncomingCallPopup = ({
   onReject,
 }: IncomingCallPopupProps) => {
   return (
-    // <div className="fixed bottom-6 right-6 bg-zinc-900 text-white p-4 rounded-xl shadow-lg flex items-center gap-4 animate-fade-in">
     <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-zinc-900 text-white p-6 rounded-xl animate-fade-in z-50">
       <div className=" flex flex-col items-center gap-2  z-50">
         <Image

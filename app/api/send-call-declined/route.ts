@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     type: "call_declined",
     roomName,
     recipientId: callerId,
-    manualCancel: manualCancel ? "true" : "false", // ✅ must be string
+    manualCancel: manualCancel ? "false" : "true", // ✅ must be string
   });
 
   return NextResponse.json({ success: true });

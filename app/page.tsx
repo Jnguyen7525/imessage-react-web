@@ -7,18 +7,14 @@ import { AudioLines, Plus } from "lucide-react";
 import { conversationMessages, messagesArray } from "@/utils/messages";
 import { useConversationStore } from "@/store/useConversationStore";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-import { useCallStore } from "@/store/useCallStore";
 import { registerFCMToken } from "@/lib/firebase/registerFCMtoken";
 
 export default function Home() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const participantName = searchParams.get("user") ?? "anonymous";
-  const setIncomingCall = useCallStore((s) => s.setIncomingCall);
-  const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
 
   const setSelectedConversation = useConversationStore(
     (state) => state.setSelectedConversation
@@ -26,8 +22,6 @@ export default function Home() {
   const selectedConversation = useConversationStore(
     (state) => state.selectedConversation
   );
-
-  const showOptions = useConversationStore((state) => state.showOptions);
 
   const [search, setSearch] = useState("");
   const [messages, setMessages] = useState(messagesArray);
@@ -51,13 +45,12 @@ export default function Home() {
     console.log("Found selected:", selected); // ✅ Should log the object
 
     setSelectedConversation(selected);
-    console.log("Selected conversation (after set):", selectedConversation);
-    // router.push(`/message/${id}`);
+    // console.log("Selected conversation (after set):", selectedConversation);
   };
 
-  useEffect(() => {
-    console.log("Selected conversation (after set):", selectedConversation);
-  }, [selectedConversation]);
+  // useEffect(() => {
+  //   console.log("Selected conversation (after set):", selectedConversation);
+  // }, [selectedConversation]);
 
   // Call registerFCMToken() when the user logs in or loads the app.
   useEffect(() => {
@@ -80,7 +73,6 @@ export default function Home() {
         // data-lk-theme="default"
       >
         <Header />
-        {/* <CallUIOverlay />  */}
         {/* 🧱 Split layout below */}
         <div className="flex min-h-0 flex-1 w-full">
           {/* Sidebar / Inbox */}
@@ -121,7 +113,6 @@ export default function Home() {
                     <div className="flex items-center justify-between flex-1 mx-2 border border-zinc-800 rounded-full px-5 py-1">
                       <input
                         className="w-full rounded-full outline-none"
-                        // placeholderTextColor={colors.zinc[400]}
                         placeholder="Message"
                       />
                       {/* Plus icon (right) */}

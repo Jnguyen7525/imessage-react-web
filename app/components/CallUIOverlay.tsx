@@ -374,8 +374,6 @@ export default function CallUIOverlay() {
     callerName: string;
   }>(null);
 
-  const hasJoinedRef = React.useRef(false); // ✅ Prevent duplicate joins
-  const hasNavigatedRef = React.useRef(false);
   const previousRoomRef = React.useRef<Room | null>(null);
 
   React.useEffect(() => {
@@ -387,8 +385,7 @@ export default function CallUIOverlay() {
     roomName: string,
     liveKitUrl: string,
     audioOnly: boolean,
-    callerName: string,
-    oldRoom?: Room | null
+    callerName: string
   ) => {
     const currentRoom = useRoomBridgeStore.getState().room;
     if (currentRoom && currentRoom.state === "connected") {
@@ -398,11 +395,6 @@ export default function CallUIOverlay() {
       console.log("⚠️ No connected room to disconnect");
     }
 
-    // if (room && room.state === "connected") {
-    // if (room) {
-    //   console.log("Disconnecting from current room:", room);
-    //   await room.disconnect(); // ✅ Leave current room cleanly
-    // }
     console.log("old room:", currentRoom);
     console.log("Joining new room:", roomName, room);
     const res = await fetch(
@@ -441,17 +433,28 @@ export default function CallUIOverlay() {
   }, []);
 
   // 🧹 Clear room context if not on /custom
-  // React.useEffect(() => {
-  //   // if (!pathname.startsWith("/custom")) {
-  //   if (pathname === "/") {
-  //     setTimeout(() => {
-  //       const currentRoom = useRoomBridgeStore.getState().room;
-  //       if (currentRoom !== null) {
-  //         useRoomBridgeStore.getState().setRoom(null);
-  //       }
-  //     }, 0);
-  //   }
-  // }, [pathname]);
+
+  React.useEffect(() => {
+    if (pathname === "/") {
+      setTimeout(() => {
+        const currentRoom = useRoomBridgeStore.getState().room;
+        console.log("🧹 Checking for room reset on inbox return");
+        console.log(
+          "🔍 RoomBridgeStore before clearing:",
+          currentRoom?.name,
+          currentRoom?.state,
+          currentRoom
+        );
+
+        if (currentRoom !== null) {
+          useRoomBridgeStore.getState().setRoom(null);
+          console.log("🧹 RoomBridgeStore cleared — now set to null");
+        } else {
+          console.log("✅ No room to clear — already null");
+        }
+      }, 0);
+    }
+  }, [pathname]);
 
   // 🧹 Clear outgoing call on unmount
   React.useEffect(() => {
@@ -462,10 +465,6 @@ export default function CallUIOverlay() {
 
   // ✅ Incoming call UI
   if (incomingCall) {
-    const currentRoomName = searchParams.get("roomName");
-    const isAlreadyInRoom = currentRoomName && pathname.startsWith("/custom");
-    const isDifferentRoom = currentRoomName !== incomingCall.roomName;
-
     const handleAccept = async () => {
       const currentRoomName = searchParams.get("roomName");
       const isAlreadyInRoom =
@@ -549,7 +548,7 @@ export default function CallUIOverlay() {
               body: JSON.stringify({
                 callerId: incomingCall.callerName,
                 roomName: incomingCall.roomName,
-                manualCancel: true, // ✅ flag for manual cancel
+                manualCancel: false, // ✅ flag for manual cancel
               }),
             });
 
@@ -587,8 +586,7 @@ export default function CallUIOverlay() {
                       pendingCallData.roomName,
                       pendingCallData.liveKitUrl,
                       pendingCallData.audioOnly,
-                      pendingCallData.callerName,
-                      useRoomBridgeStore.getState().room
+                      pendingCallData.callerName
                     );
 
                     // ✅ Notify caller before switching

@@ -12,8 +12,6 @@ export default async function CustomRoomConnection(props: {
     audioOnly?: string;
   }>;
 }) {
-  // const { liveKitUrl, token, codec, participantName } =
-  //   await props.searchParams;
   const { liveKitUrl, token, codec, participantName, audioOnly } =
     await props.searchParams;
   const isAudioOnly = audioOnly === "true";

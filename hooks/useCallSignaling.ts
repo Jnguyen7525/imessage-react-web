@@ -616,14 +616,9 @@ export function useCallSignaling() {
   const isInbox = pathname === "/";
   const isRoom = pathname?.startsWith("/custom");
 
-  // ✅ Guards to prevent duplicate navigation or call UI
-  const hasNavigatedRef = React.useRef(false);
-  const hasIncomingCallRef = React.useRef(false);
-
   // ✅ Shared handler for incoming calls (from FCM or service worker)
   const handleIncomingCall = (payload: any, source: "fcm" | "sw") => {
     const currentIncoming = useCallStore.getState().incomingCall;
-    console.log("🔍 hasIncomingCallRef:", hasIncomingCallRef.current);
     console.log(
       "🔍 currentIncomingCall:",
       useCallStore.getState().incomingCall
@@ -636,9 +631,6 @@ export function useCallSignaling() {
       console.warn("🚫 Duplicate incoming call — ignoring");
       return;
     }
-
-    // ✅ Fresh call — allow it
-    hasIncomingCallRef.current = true;
 
     if (!payload || payload.recipientId !== participantName) return;
 
@@ -702,12 +694,7 @@ export function useCallSignaling() {
       return;
     }
 
-    if (
-      acceptedRoom &&
-      !alreadyInRoom &&
-      // !hasNavigatedRef.current &&
-      isCaller
-    ) {
+    if (acceptedRoom && !alreadyInRoom && isCaller) {
       console.log("🚀 Navigating to:", {
         room: acceptedRoom,
         user: callerName,
