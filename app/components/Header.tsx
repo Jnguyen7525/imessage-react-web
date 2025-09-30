@@ -259,7 +259,7 @@ function Header() {
     setTimeout(() => {
       const currentCall = useCallStore.getState().outgoingCall;
       if (currentCall?.roomName === roomName) {
-        alert("Call timed out — no response");
+        console.log("Call timed out — no response");
         useCallStore.getState().clearOutgoingCall();
       }
     }, 30000);
@@ -311,7 +311,7 @@ function Header() {
     setTimeout(() => {
       const currentCall = useCallStore.getState().outgoingCall;
       if (currentCall?.roomName === roomName) {
-        alert("Audio call timed out — no response");
+        console.log("Audio call timed out — no response");
         useCallStore.getState().clearOutgoingCall();
       }
     }, 30000);

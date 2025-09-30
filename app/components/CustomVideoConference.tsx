@@ -419,12 +419,6 @@ export function CustomVideoConference({
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
-                                  // calleeId: msg.name,
-                                  // callerName: participantName,
-                                  // callerAvatar,
-                                  // roomName,
-                                  // liveKitUrl: data.serverUrl,
-                                  // audioOnly,
                                   calleeId: msg.name,
                                   callerName: participantName,
                                   callerAvatar,
@@ -437,13 +431,6 @@ export function CustomVideoConference({
 
                               // 🎯 Update Zustand with outgoing call state
                               useCallStore.getState().setOutgoingCall({
-                                // calleeName: msg.name,
-                                // calleeAvatar: msg.avatar,
-                                // roomName,
-                                // liveKitUrl: data.serverUrl,
-                                // callerToken: data.participantToken,
-                                // callerName: participantName,
-                                // audioOnly,
                                 calleeName: msg.name,
                                 calleeAvatar: msg.avatar,
                                 roomName,
@@ -458,7 +445,7 @@ export function CustomVideoConference({
                                 const currentCall =
                                   useCallStore.getState().outgoingCall;
                                 if (currentCall?.roomName === roomName) {
-                                  alert(
+                                  console.log(
                                     `${msg.name} did not respond — call timed out`
                                   );
                                   useCallStore.getState().clearOutgoingCall();

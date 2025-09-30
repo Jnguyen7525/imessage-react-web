@@ -653,17 +653,30 @@ export function useCallSignaling() {
     });
 
     // ✅ Only play ringtone if tab is visible
-    if (document.visibilityState === "visible") {
-      const audio = new Audio("/ringtone.mp3");
-      audio.loop = true;
-      audio.play();
+    // if (document.visibilityState === "visible") {
+    //   const audio = new Audio("/ringtone.mp3");
+    //   audio.loop = true;
+    //   audio.play();
 
-      setTimeout(() => {
-        console.log("⏱️ Call timed out — clearing incoming call");
-        clearIncomingCall();
-        audio.pause();
-      }, 30000);
+    //   setTimeout(() => {
+    //     console.log("⏱️ Call timed out — clearing incoming call");
+    //     clearIncomingCall();
+    //     audio.pause();
+    //   }, 30000);
+    // }
+
+    const audio = new Audio("/ringtone.mp3");
+    audio.loop = true;
+
+    if (document.visibilityState === "visible") {
+      audio.play();
     }
+
+    const timeout = setTimeout(() => {
+      console.log("⏱️ Incoming call timed out — clearing on callee side");
+      clearIncomingCall();
+      audio.pause();
+    }, 30000);
   };
 
   // ✅ Shared handler for call_accepted (from FCM or service worker)
