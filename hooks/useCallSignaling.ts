@@ -653,18 +653,6 @@ export function useCallSignaling() {
     });
 
     // ✅ Only play ringtone if tab is visible
-    // if (document.visibilityState === "visible") {
-    //   const audio = new Audio("/ringtone.mp3");
-    //   audio.loop = true;
-    //   audio.play();
-
-    //   setTimeout(() => {
-    //     console.log("⏱️ Call timed out — clearing incoming call");
-    //     clearIncomingCall();
-    //     audio.pause();
-    //   }, 30000);
-    // }
-
     const audio = new Audio("/ringtone.mp3");
     audio.loop = true;
 
@@ -683,12 +671,6 @@ export function useCallSignaling() {
   const handleCallAccepted = (payload: any, source: "fcm" | "sw") => {
     if (!payload || payload.recipientId !== participantName) return;
     const isCaller = outgoingCall?.callerName === participantName;
-
-    // if (!isCaller) {
-    //   console.log(`🚫 Not the caller ${outgoingCall}— skipping navigation`);
-    //   console.log(`🚫 Not the caller ${payload}— skipping navigation`);
-    //   return;
-    // }
 
     console.log(`✅ call_accepted received via ${source}:`, payload);
 

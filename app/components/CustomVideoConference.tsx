@@ -119,47 +119,14 @@ export function CustomVideoConference({
 
   const room = useRoomContext();
 
-  // React.useEffect(() => {
-  //   useRoomBridgeStore.getState().setRoom(room);
-  // }, [room]);
-  // React.useEffect(() => {
-  //   console.log("🧭 RoomBridgeStore updated with room:", room);
-  // }, [room]);
-
-  // React.useEffect(() => {
-  //   if (room && room.state === "connected") {
-  //     const room = useRoomBridgeStore((s) => s.room);
-  //     console.log("🧭 RoomBridgeStore old room:", room);
-  //   }
-  // }, [room?.state]);
-  // React.useEffect(() => {
-  //   if (room) {
-  //     const previousRoom = useRoomBridgeStore.getState().room;
-  //     console.log("🧭 RoomBridgeStore old room:", previousRoom);
-  //     useRoomBridgeStore.getState().setRoom(room);
-  //     console.log("🧭 RoomBridgeStore updated with new room:", room);
-  //   }
-  // }, [room]);
-
   React.useEffect(() => {
     // ✅ Reset layout and track state when room changes
     layoutContext.pin.dispatch?.({ msg: "clear_pin" });
     lastAutoFocusedScreenShareTrack.current = null;
 
-    // ✅ Clear stale room context (if needed)
-    // useRoomBridgeStore.getState().setRoom(null);
-
     log.debug("🧹 Cleared layout state on room switch:", room.name);
   }, [room.name]);
 
-  // React.useEffect(() => {
-  //   if (room) {
-  //     const previousRoom = useRoomBridgeStore.getState().room;
-  //     console.log("🧭 RoomBridgeStore old room:", previousRoom);
-  //     useRoomBridgeStore.getState().setRoom(room);
-  //     console.log("🧭 RoomBridgeStore updated with new room:", room);
-  //   }
-  // }, [room]);
   React.useEffect(() => {
     if (room && room.state === "connected") {
       const previousRoom = useRoomBridgeStore.getState().room;
@@ -178,7 +145,6 @@ export function CustomVideoConference({
   }, [room?.state]);
 
   React.useEffect(() => {
-    // useRoomBridgeStore.getState().setRoom(null);
     console.log("🧹 Cleared layout state on room switch:", room.name);
   }, [room.name]);
 
