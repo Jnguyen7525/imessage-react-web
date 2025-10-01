@@ -2,6 +2,7 @@
 import { supabase } from "@/lib/supabase/supabase";
 import Link from "next/link";
 import { useState } from "react";
+import Header from "../components/Header";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -22,11 +23,7 @@ export default function SignupPage() {
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="w-full border-b-2 border-zinc-900 p-5">
-        <Link href={"/"} className="cursor-pointer">
-          Home
-        </Link>
-      </div>
+      <Header />
       <div className="p-6 max-w-md mx-auto flex flex-col w-full h-full justify-center items-center">
         <h1 className="text-xl font-bold mb-4">Sign Up</h1>
         <input

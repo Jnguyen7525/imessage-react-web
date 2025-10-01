@@ -184,16 +184,22 @@
 import { useConversationStore } from "@/store/useConversationStore";
 import { Ellipsis, Phone, Video } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
 import { generateRoomId } from "@/lib/client-utils";
 import { useCallStore } from "@/store/useCallStore";
 import { messagesArray } from "@/utils/messages";
+import Link from "next/link";
 
 function Header() {
   // 🧠 Get current user from URL param
   const searchParams = useSearchParams();
   const participantName = searchParams.get("user") ?? "anonymous";
+
+  const pathname = usePathname();
+  const isInbox = pathname === "/";
+  const isLogin = pathname === "/login";
+  const isSignup = pathname === "/signup";
 
   // 🧠 Zustand state for outgoing call
   const setOutgoingCall = useCallStore((state) => state.setOutgoingCall);
@@ -207,6 +213,25 @@ function Header() {
   const toggleShowOptions = useConversationStore(
     (state) => state.toggleShowOptions
   );
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // 🔍 Debug: log selected contact
   // useEffect(() => {
@@ -322,36 +347,57 @@ function Header() {
   const [searchText, setSearchText] = useState("");
 
   return (
-    <div className="bg-[#09090b] w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800">
+    <div className="bg-[#09090b] w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800 justify-between">
       {/* 👤 Contact Info */}
-      <div>
+      {/* <div>
         {selectedConversation ? (
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Image
               className="w-12 h-12 rounded-full"
               src={selectedConversation.avatar}
               alt=""
             />
             <span>{selectedConversation.name}</span>
-          </div>
+          </Link>
         ) : (
-          <span>Messages</span>
+          <Link href="/">Messages</Link>
+        )}
+      </div> */}
+      <div>
+        {isLogin ? (
+          <Link href="/">Login</Link>
+        ) : isSignup ? (
+          <Link href="/">Signup</Link>
+        ) : selectedConversation ? (
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80">
+            <Image
+              className="w-12 h-12 rounded-full"
+              src={selectedConversation.avatar}
+              alt=""
+            />
+            <span>{selectedConversation.name}</span>
+          </Link>
+        ) : (
+          <Link href="/" className="hover:opacity-80">
+            Messages
+          </Link>
         )}
       </div>
 
       {/* 🔍 Search Bar */}
-      <div className="border-1 border-[#27272a] h-fit w-fit rounded-full flex-1 mx-4">
-        <input
-          className="px-4 py-1 w-full rounded-full"
-          placeholder="Search..."
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-      </div>
-
+      {isInbox && (
+        <div className="border-1 border-[#27272a] h-fit w-fit rounded-full flex-1 mx-4">
+          <input
+            className="px-4 py-1 w-full rounded-full"
+            placeholder="Search..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </div>
+      )}
       {/* 📞 Call Controls */}
-      <div className="flex gap-4 text-[#851de0]">
-        <Phone
+      <div className="flex gap-4 text-[#851de0] relative">
+        {/* <Phone
           className={`${
             selectedConversation ? "cursor-pointer hover:opacity-50" : "hidden"
           }`}
@@ -362,8 +408,44 @@ function Header() {
             selectedConversation ? "cursor-pointer hover:opacity-50" : "hidden"
           }`}
           onClick={startMeeting}
+        /> */}
+        {isInbox && selectedConversation && (
+          <>
+            <Phone
+              className="cursor-pointer hover:opacity-50"
+              onClick={startAudioCall}
+            />
+            <Video
+              className="cursor-pointer hover:opacity-50"
+              onClick={startMeeting}
+            />
+          </>
+        )}
+
+        <Ellipsis
+          className="cursor-pointer hover:opacity-50"
+          onClick={() => setShowDropdown((prev) => !prev)}
         />
-        <Ellipsis className="cursor-pointer hover:opacity-50" />
+
+        {showDropdown && (
+          <div
+            className="absolute right-0 top-10 bg-zinc-900 border border-zinc-700 rounded-md shadow-lg p-2 z-50"
+            ref={dropdownRef}
+          >
+            <Link
+              href="/login"
+              className="block px-4 py-2 hover:bg-zinc-800 rounded"
+            >
+              Login
+            </Link>
+            <Link
+              href="/signup"
+              className="block px-4 py-2 hover:bg-zinc-800 rounded"
+            >
+              Signup
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
