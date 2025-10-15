@@ -498,6 +498,10 @@ function Header() {
                   <span className="text-sm">{userName}</span>
                 </div>
 
+                <Link href="/profile" className="hover:text-purple-500">
+                  Profile
+                </Link>
+
                 <button
                   onClick={async () => {
                     const supabase = createClient();
