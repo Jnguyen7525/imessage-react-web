@@ -190,6 +190,7 @@ import { generateRoomId } from "@/lib/client-utils";
 import { useCallStore } from "@/store/useCallStore";
 import { messagesArray } from "@/utils/messages";
 import Link from "next/link";
+import { LOGIN_PATH } from "../constants/common";
 
 function Header() {
   // 🧠 Get current user from URL param
@@ -433,13 +434,14 @@ function Header() {
             ref={dropdownRef}
           >
             <Link
-              href="/login"
+              // href="/login?next=/"
+              href={LOGIN_PATH}
               className="block px-4 py-2 hover:bg-zinc-800 rounded"
             >
               Login
             </Link>
             <Link
-              href="/signup"
+              href="/signup?next=/"
               className="block px-4 py-2 hover:bg-zinc-800 rounded"
             >
               Signup

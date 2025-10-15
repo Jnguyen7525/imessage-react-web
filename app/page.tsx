@@ -3,7 +3,7 @@
 import Header from "@/app/components/Header";
 import { Message } from "./components/Message";
 import { ConversationMessage } from "./components/ConversationMessage";
-import { AudioLines, Plus } from "lucide-react";
+import { AudioLines, LoaderCircle, Plus } from "lucide-react";
 import { conversationMessages, messagesArray } from "@/utils/messages";
 import { useConversationStore } from "@/store/useConversationStore";
 
@@ -11,8 +11,11 @@ import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import { registerFCMToken } from "@/lib/firebase/registerFCMtoken";
+import useUser from "@/hooks/useUser";
 
 export default function Home() {
+  const { loading, error, user } = useUser();
+
   const searchParams = useSearchParams();
   const participantName = searchParams.get("user") ?? "anonymous";
 
@@ -65,6 +68,23 @@ export default function Home() {
       });
     }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-2 text-gray-500">
+        <LoaderCircle className="animate-spin size-5" />
+        <span>Loading user data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
+        <p>Error: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="font-sans ">

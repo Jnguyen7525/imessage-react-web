@@ -6,7 +6,9 @@
 //   return "mock-fcm-token";
 // }
 
-import { supabase } from "../supabase/supabase";
+import createClient from "../supabase/client";
+
+// import { supabase } from "../supabase/client";
 
 // export async function saveFCMTokenForUser(
 //   userId: string,
@@ -16,6 +18,8 @@ import { supabase } from "../supabase/supabase";
 // }
 
 export async function saveFCMTokenForUser(userId: string, token: string) {
+  const supabase = createClient();
+
   const { error } = await supabase
     .from("fcm_tokens")
     .upsert({ user_id: userId, token });
@@ -26,6 +30,7 @@ export async function saveFCMTokenForUser(userId: string, token: string) {
 export async function getFCMTokenForUser(
   userId: string
 ): Promise<string | null> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("fcm_tokens")
     .select("token")
