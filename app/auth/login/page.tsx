@@ -4,22 +4,36 @@ import createClient from "@/lib/supabase/client";
 import Link from "next/link";
 import { useState } from "react";
 import Header from "../../components/Header";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { SIGNUP_PATH } from "@/app/constants/common";
 
 export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  const supabase = createClient();
-
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next");
-  const errorMessage = searchParams.get("error");
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const supabase = createClient();
+  const router = useRouter();
+
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/";
+  const errorMessage = searchParams.get("error");
+
+  const handleLogin = async () => {
+    setError(null);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      router.push(next);
+    }
+  };
 
   const loginWithGoogle = async () => {
     setIsGoogleLoading(true);
@@ -29,9 +43,6 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          // redirectTo: `${window.location.origin}/auth/callback${
-          //   next ? `?next=${encodeURIComponent(next)}` : ""
-          // }`,
           redirectTo: `${
             window.location.origin
           }/auth/callback?next=${encodeURIComponent(next ?? "/")}&flow=login`,
@@ -46,24 +57,6 @@ export default function LoginPage() {
       console.error("Error loging in with Google:", error);
       setIsGoogleLoading(false);
     }
-  };
-
-  const handleLogin = async () => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) alert(error.message);
-    else alert("Logged in!");
-  };
-
-  const handleGoogleLogin = async () => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-    });
-    if (error) alert(error.message);
   };
 
   return (

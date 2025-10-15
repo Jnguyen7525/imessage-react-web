@@ -100,7 +100,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       {/* <body data-lk-theme="default"> */}
-      <body data-lk-theme="default">
+      <body data-lk-theme="default" suppressHydrationWarning>
         {/* <Toaster /> */}
         <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
         <CallUIOverlay />

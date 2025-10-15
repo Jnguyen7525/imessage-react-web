@@ -3,33 +3,40 @@ import createClient from "@/lib/supabase/client";
 import Link from "next/link";
 import { useState } from "react";
 import Header from "../../components/Header";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
+import { LOGIN_PATH } from "@/app/constants/common";
 
 export default function SignupPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const supabase = createClient();
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/";
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
   const handleSignup = async () => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) alert(error.message);
-    else alert("Check your email to confirm your account");
-  };
+    setError(null);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+      },
+    });
 
-  // const handleGoogleSignup = async () => {
-  //   const { error } = await supabase.auth.signInWithOAuth({
-  //     provider: "google",
-  //   });
-  //   if (error) alert(error.message);
-  // };
+    if (error) {
+      setError(error.message);
+    } else {
+      alert("Check your email to confirm your account.");
+      router.push(LOGIN_PATH);
+    }
+  };
 
   const handleGoogleSignup = async () => {
     setIsGoogleLoading(true);
@@ -39,9 +46,6 @@ export default function SignupPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          // redirectTo: `${
-          //   window.location.origin
-          // }/auth/callback?next=${encodeURIComponent(next)}&flow=signup`,
           redirectTo: `${
             window.location.origin
           }/auth/callback?next=${encodeURIComponent(next ?? "/")}&flow=signup`,
@@ -61,6 +65,14 @@ export default function SignupPage() {
       <Header />
       <div className="p-6 max-w-md mx-auto flex flex-col w-full h-full justify-center items-center">
         <h1 className="text-xl font-bold mb-4">Sign Up</h1>
+        <input
+          className="w-full mb-2 p-2 border-b"
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
         <input
           className="w-full mb-2 p-2 border-b"
           type="email"

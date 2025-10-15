@@ -71,6 +71,73 @@
 //   return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 // }
 
+// import createClient from "@/lib/supabase/server";
+// import { NextResponse } from "next/server";
+
+// export async function GET(request: Request) {
+//   const { searchParams, origin } = new URL(request.url);
+
+//   const code = searchParams.get("code");
+//   const next = searchParams.get("next") ?? "/";
+//   const flow = searchParams.get("flow") ?? "login";
+
+//   if (code) {
+//     const supabase = await createClient();
+//     const {
+//       data: { user },
+//       error,
+//     } = await supabase.auth.exchangeCodeForSession(code);
+
+//     if (!error && user) {
+//       console.log(`✅ ${flow.toUpperCase()} flow for user:`, user.email);
+
+//       if (flow === "login") {
+//         // Check if user already exists in your profiles table
+//         const { data: profile } = await supabase
+//           .from("users")
+//           .select("id")
+//           .eq("id", user.id)
+//           .single();
+
+//         if (!profile) {
+//           console.log("🚫 Google login attempted by unregistered user");
+//           const redirect = new URL(`${origin}/auth/login`);
+//           redirect.searchParams.set(
+//             "error",
+//             "You need to sign up before logging in with Google."
+//           );
+//           return NextResponse.redirect(redirect);
+//         }
+//       }
+
+//       if (flow === "signup") {
+//         // Create profile entry if needed
+//         await supabase.from("users").upsert({
+//           id: user.id,
+//           email: user.email,
+//           name:
+//             user.user_metadata?.full_name ??
+//             user.user_metadata?.name ??
+//             user.email?.split("@")[0], // fallback to email prefix
+//         });
+//         console.log("🆕 Created profile for new Google signup");
+//         console.log("🆕 Creating user with:", {
+//           id: user.id,
+//           email: user.email,
+//           name:
+//             user.user_metadata?.full_name ??
+//             user.user_metadata?.name ??
+//             user.email?.split("@")[0],
+//         });
+//       }
+
+//       return NextResponse.redirect(`${origin}${next}`);
+//     }
+//   }
+
+//   return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+// }
+
 import createClient from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -81,59 +148,52 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/";
   const flow = searchParams.get("flow") ?? "login";
 
-  if (code) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error && user) {
-      console.log(`✅ ${flow.toUpperCase()} flow for user:`, user.email);
-
-      if (flow === "login") {
-        // Check if user already exists in your profiles table
-        const { data: profile } = await supabase
-          .from("users")
-          .select("id")
-          .eq("id", user.id)
-          .single();
-
-        if (!profile) {
-          console.log("🚫 Google login attempted by unregistered user");
-          const redirect = new URL(`${origin}/auth/login`);
-          redirect.searchParams.set(
-            "error",
-            "You need to sign up before logging in with Google."
-          );
-          return NextResponse.redirect(redirect);
-        }
-      }
-
-      if (flow === "signup") {
-        // Create profile entry if needed
-        await supabase.from("users").upsert({
-          id: user.id,
-          email: user.email,
-          name:
-            user.user_metadata?.full_name ??
-            user.user_metadata?.name ??
-            user.email?.split("@")[0], // fallback to email prefix
-        });
-        console.log("🆕 Created profile for new Google signup");
-        console.log("🆕 Creating user with:", {
-          id: user.id,
-          email: user.email,
-          name:
-            user.user_metadata?.full_name ??
-            user.user_metadata?.name ??
-            user.email?.split("@")[0],
-        });
-      }
-
-      return NextResponse.redirect(`${origin}${next}`);
-    }
+  if (!code) {
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
   }
 
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error || !user) {
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  }
+
+  console.log(`✅ ${flow.toUpperCase()} flow for user:`, user.email);
+
+  // 🔄 Ensure profile exists in public.users
+  const { data: profile } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    // 🆕 Create fallback profile
+    await supabase.from("users").upsert({
+      id: user.id,
+      email: user.email,
+      name:
+        user.user_metadata?.full_name ??
+        user.user_metadata?.name ??
+        user.email?.split("@")[0],
+    });
+    console.log("🆕 Fallback profile created for:", user.email);
+  }
+
+  // 🚫 Block login if profile was missing and flow is login
+  if (flow === "login" && !profile) {
+    console.log("🚫 Google login attempted by unregistered user");
+    const redirect = new URL(`${origin}/auth/login`);
+    redirect.searchParams.set(
+      "error",
+      "You need to sign up before logging in with Google."
+    );
+    return NextResponse.redirect(redirect);
+  }
+
+  return NextResponse.redirect(`${origin}${next}`);
 }
