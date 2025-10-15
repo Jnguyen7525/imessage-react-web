@@ -190,9 +190,24 @@ import { generateRoomId } from "@/lib/client-utils";
 import { useCallStore } from "@/store/useCallStore";
 import { messagesArray } from "@/utils/messages";
 import Link from "next/link";
-import { LOGIN_PATH } from "../constants/common";
+import { LOGIN_PATH, SIGNUP_PATH } from "../constants/common";
+import createClient from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 function Header() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
+  const userName =
+    user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "User";
+  const userAvatar = user?.user_metadata?.avatar_url ?? null;
+
   // 🧠 Get current user from URL param
   const searchParams = useSearchParams();
   const participantName = searchParams.get("user") ?? "anonymous";
@@ -430,10 +445,28 @@ function Header() {
 
         {showDropdown && (
           <div
-            className="absolute right-0 top-10 bg-zinc-900 border border-zinc-700 rounded-md shadow-lg p-2 z-50"
+            className="absolute right-0 top-10 bg-zinc-900 border border-zinc-700 rounded-md shadow-lg p-2 z-50 w-40"
             ref={dropdownRef}
           >
-            <Link
+            {/* {user && (
+              <div className="flex items-center gap-2">
+                {userAvatar ? (
+                  <Image
+                    src={userAvatar}
+                    alt={userName}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-white font-bold">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm">{userName}</span>
+              </div>
+            )} */}
+            {/* <Link
               // href="/login?next=/"
               href={LOGIN_PATH}
               className="block px-4 py-2 hover:bg-zinc-800 rounded"
@@ -441,11 +474,57 @@ function Header() {
               Login
             </Link>
             <Link
-              href="/signup?next=/"
+              href={SIGNUP_PATH}
               className="block px-4 py-2 hover:bg-zinc-800 rounded"
             >
               Signup
-            </Link>
+            </Link> */}
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2">
+                  {userAvatar ? (
+                    <Image
+                      src={userAvatar}
+                      alt={userName}
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-white font-bold">
+                      {userName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm">{userName}</span>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    window.location.href = "/auth/login"; // or use router.push if preferred
+                  }}
+                  className="block px-4 py-2 hover:bg-zinc-800 rounded text-left w-full"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href={LOGIN_PATH}
+                  className="block px-4 py-2 hover:bg-zinc-800 rounded"
+                >
+                  Login
+                </Link>
+                <Link
+                  href={SIGNUP_PATH}
+                  className="block px-4 py-2 hover:bg-zinc-800 rounded"
+                >
+                  Signup
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

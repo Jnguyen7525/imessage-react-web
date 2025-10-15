@@ -75,7 +75,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { LOGIN_PATH } from "@/app/constants/common";
+import { LOGIN_PATH, SIGNUP_PATH } from "@/app/constants/common";
 
 export default async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -118,8 +118,8 @@ export default async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Prevent authenticated users from accessing the login page
-  if (user && path.startsWith(LOGIN_PATH)) {
+  // Prevent authenticated users from accessing the login page or signup page
+  if ((user && path.startsWith(LOGIN_PATH)) || path.startsWith(SIGNUP_PATH)) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

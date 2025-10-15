@@ -6,6 +6,7 @@ import { useState } from "react";
 import Header from "../../components/Header";
 import { useSearchParams } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
+import { SIGNUP_PATH } from "@/app/constants/common";
 
 export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
@@ -15,6 +16,7 @@ export default function LoginPage() {
 
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
+  const errorMessage = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,9 +29,12 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback${
-            next ? `?next=${encodeURIComponent(next)}` : ""
-          }`,
+          // redirectTo: `${window.location.origin}/auth/callback${
+          //   next ? `?next=${encodeURIComponent(next)}` : ""
+          // }`,
+          redirectTo: `${
+            window.location.origin
+          }/auth/callback?next=${encodeURIComponent(next ?? "/")}&flow=login`,
         },
       });
 
@@ -99,6 +104,17 @@ export default function LoginPage() {
           )}
           <span>Login with Google</span>
         </button>
+        {errorMessage && (
+          <p className="text-red-500 mt-4 text-sm text-center">
+            {decodeURIComponent(errorMessage)}{" "}
+            <Link
+              href={SIGNUP_PATH}
+              className="underline text-purple-500 hover:text-purple-400"
+            >
+              Sign up here
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );
