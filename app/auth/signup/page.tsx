@@ -22,6 +22,8 @@ export default function SignupPage() {
 
   const handleSignup = async () => {
     setError(null);
+    console.log("🔔 Attempting signup with:", { email, name });
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -31,11 +33,14 @@ export default function SignupPage() {
     });
 
     if (error) {
+      console.error("❌ Signup error:", error.message);
       setError(error.message);
-    } else {
-      alert("Check your email to confirm your account.");
-      router.push(LOGIN_PATH);
+      return;
     }
+
+    console.log("✅ Signup initiated. Awaiting email confirmation.");
+    alert("Check your email to confirm your account.");
+    router.push(LOGIN_PATH);
   };
 
   const handleGoogleSignup = async () => {
@@ -87,18 +92,18 @@ export default function SignupPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
+        {error && (
+          <p className="text-red-500 text-sm mb-2 w-full text-left">{error}</p>
+        )}
+
         <button
           className="w-full bg-purple-600 text-white py-2 mb-2 rounded-lg cursor-pointer"
           onClick={handleSignup}
         >
           Sign Up
         </button>
-        {/* <button
-          className="w-full bg-zinc-800 text-white py-2 rounded-lg cursor-pointer"
-          onClick={handleGoogleSignup}
-        >
-          <span>Sign Up with Google</span>
-        </button> */}
+
         <button
           className="w-full bg-zinc-800 text-white py-2 rounded-lg cursor-pointer flex items-center justify-center gap-3"
           onClick={handleGoogleSignup}

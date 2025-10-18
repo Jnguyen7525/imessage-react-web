@@ -210,7 +210,11 @@ function Header() {
 
   // 🧠 Get current user from URL param
   const searchParams = useSearchParams();
-  const participantName = searchParams.get("user") ?? "anonymous";
+  // const participantName = searchParams.get("user") ?? "anonymous";
+  const participantName =
+    user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "anonymous";
+
+  const participantAvatar = user?.user_metadata?.avatar_url ?? "";
 
   const pathname = usePathname();
   const isInbox = pathname === "/";
@@ -258,10 +262,12 @@ function Header() {
   const startMeeting = async () => {
     if (!selectedConversation) return;
 
-    const callerInfo = messagesArray.find(
-      (msg) => msg.name === participantName
-    );
-    const callerAvatar = callerInfo?.avatar ?? "";
+    // const callerInfo = messagesArray.find(
+    //   (msg) => msg.name === participantName
+    // );
+    // const callerAvatar = callerInfo?.avatar ?? "";
+    const callerAvatar = participantAvatar;
+
     const roomName = generateRoomId();
 
     // 🔐 Get LiveKit connection details
@@ -364,21 +370,6 @@ function Header() {
 
   return (
     <div className="bg-[#09090b] w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800 justify-between">
-      {/* 👤 Contact Info */}
-      {/* <div>
-        {selectedConversation ? (
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              className="w-12 h-12 rounded-full"
-              src={selectedConversation.avatar}
-              alt=""
-            />
-            <span>{selectedConversation.name}</span>
-          </Link>
-        ) : (
-          <Link href="/">Messages</Link>
-        )}
-      </div> */}
       <div>
         {isLogin ? (
           <Link href="/">Login</Link>
@@ -413,18 +404,6 @@ function Header() {
       )}
       {/* 📞 Call Controls */}
       <div className="flex gap-4 text-[#851de0] relative">
-        {/* <Phone
-          className={`${
-            selectedConversation ? "cursor-pointer hover:opacity-50" : "hidden"
-          }`}
-          onClick={startAudioCall}
-        />
-        <Video
-          className={`${
-            selectedConversation ? "cursor-pointer hover:opacity-50" : "hidden"
-          }`}
-          onClick={startMeeting}
-        /> */}
         {isInbox && selectedConversation && (
           <>
             <Phone
@@ -448,37 +427,6 @@ function Header() {
             className="absolute right-0 top-10 bg-zinc-900 border border-zinc-700 rounded-md shadow-lg p-2 z-50 w-40"
             ref={dropdownRef}
           >
-            {/* {user && (
-              <div className="flex items-center gap-2">
-                {userAvatar ? (
-                  <Image
-                    src={userAvatar}
-                    alt={userName}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-white font-bold">
-                    {userName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <span className="text-sm">{userName}</span>
-              </div>
-            )} */}
-            {/* <Link
-              // href="/login?next=/"
-              href={LOGIN_PATH}
-              className="block px-4 py-2 hover:bg-zinc-800 rounded"
-            >
-              Login
-            </Link>
-            <Link
-              href={SIGNUP_PATH}
-              className="block px-4 py-2 hover:bg-zinc-800 rounded"
-            >
-              Signup
-            </Link> */}
             {user ? (
               <>
                 <div className="flex items-center gap-2 px-4 py-2">
