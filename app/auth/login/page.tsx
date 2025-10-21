@@ -237,20 +237,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col bg-zinc-950">
       <Header />
       <div className="p-6 max-w-md mx-auto flex flex-col w-full h-full justify-center items-center">
         <h1 className="text-xl font-bold mb-4">Login</h1>
 
         <input
-          className="w-full mb-1 p-2 border-b"
+          className="w-full mb-1  py-1 px-2 border-b"
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
-          className="w-full mb-2 p-2 border-b"
+          className="w-full mb-2 py-1 px-2 border-b"
           type="password"
           placeholder="Password"
           value={password}
@@ -261,14 +261,14 @@ export default function LoginPage() {
         )}
 
         <button
-          className="w-full bg-[#851de0] text-white py-2 mb-2 rounded-lg cursor-pointer"
+          className="w-full bg-blue-600 text-white py-1 mb-2 rounded-lg cursor-pointer"
           onClick={handleLogin}
         >
           Login
         </button>
 
         <button
-          className="w-full bg-zinc-800 text-white py-2 rounded-lg cursor-pointer flex items-center justify-center gap-3"
+          className="w-full bg-zinc-800 text-white py-1 rounded-lg cursor-pointer flex items-center justify-center gap-3"
           onClick={loginWithGoogle}
           disabled={isGoogleLoading}
         >

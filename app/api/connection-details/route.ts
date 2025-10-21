@@ -1,5 +1,6 @@
 import { randomString } from "@/lib/client-utils";
 import { getLiveKitURL } from "@/lib/getLiveKitURL";
+import createClient from "@/lib/supabase/server";
 import { ConnectionDetails } from "@/lib/types";
 import {
   AccessToken,
@@ -15,10 +16,26 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 const COOKIE_KEY = "random-participant-postfix";
 
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  const participantName =
+    user.user_metadata?.full_name ??
+    user.user_metadata?.name ??
+    user.email?.split("@")[0] ??
+    "anonymous";
+
   try {
     // Parse query parameters
     const roomName = request.nextUrl.searchParams.get("roomName");
-    const participantName = request.nextUrl.searchParams.get("participantName");
+    // const participantName = request.nextUrl.searchParams.get("participantName");
     const metadata = request.nextUrl.searchParams.get("metadata") ?? "";
     const region = request.nextUrl.searchParams.get("region");
     if (!LIVEKIT_URL) {

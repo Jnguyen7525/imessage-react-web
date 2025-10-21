@@ -67,6 +67,7 @@ import React from "react";
 import toast from "react-hot-toast";
 import { CustomParticipantTile } from "./CustomParticipantTile";
 import { useRoomBridgeStore } from "@/store/useRoomBridgeStore";
+import createClient from "@/lib/supabase/client";
 
 /**
  * @public
@@ -119,6 +120,24 @@ export function CustomVideoConference({
 
   const room = useRoomContext();
 
+  const [participantName, setParticipantName] = React.useState("anonymous");
+  const [participantAvatar, setParticipantAvatar] = React.useState("");
+
+  React.useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data.user;
+      const name =
+        user?.user_metadata?.full_name ??
+        user?.user_metadata?.name ??
+        user?.email?.split("@")[0] ??
+        "anonymous";
+      const avatar = user?.user_metadata?.avatar_url ?? "";
+      setParticipantName(name);
+      setParticipantAvatar(avatar);
+    });
+  }, []);
+
   React.useEffect(() => {
     // ✅ Reset layout and track state when room changes
     layoutContext.pin.dispatch?.({ msg: "clear_pin" });
@@ -151,7 +170,7 @@ export function CustomVideoConference({
   const participants = useParticipants();
   const roomName = room.name;
   const searchParams = useSearchParams();
-  const participantName = searchParams.get("user") ?? "anonymous";
+  // const participantName = searchParams.get("user") ?? "anonymous";
   const audioOnly = searchParams.get("audioOnly") === "true";
 
   const wasKickedRef = React.useRef(false);
@@ -366,10 +385,12 @@ export function CustomVideoConference({
                               );
                               const data = await res.json();
 
-                              const callerInfo = messagesArray.find(
-                                (m) => m.name === participantName
-                              );
-                              const callerAvatar = callerInfo?.avatar ?? "";
+                              // const callerInfo = messagesArray.find(
+                              //   (m) => m.name === participantName
+                              // );
+                              // const callerAvatar = callerInfo?.avatar ?? "";
+
+                              const callerAvatar = participantAvatar;
 
                               if (
                                 !participantName ||
@@ -474,6 +495,7 @@ export function CustomVideoConference({
                   )}
 
                   {/* Rooms Tab */}
+
                   {activeTab === "rooms" && (
                     <ul className="space-y-3">
                       <li className="font-semibold">

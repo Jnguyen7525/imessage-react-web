@@ -566,29 +566,49 @@ export default function ProfilePage() {
   const provider = user.app_metadata?.provider;
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col bg-black">
       <Header />
       <div className="p-6 max-w-md mx-auto flex flex-col w-full h-full justify-start items-start">
         <h1 className="text-2xl font-bold mb-4">Your Profile</h1>
-
-        {avatarUrl && (
-          <img
-            src={avatarUrl}
-            alt="Avatar"
-            className="w-24 h-24 rounded-full object-cover mb-4"
+        <div className="flex gap-5">
+          <strong>Avatar:</strong>
+          {avatarUrl && (
+            <img
+              src={avatarUrl}
+              alt="Avatar"
+              className="w-24 h-24 rounded-full object-cover mb-4"
+            />
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="mb-4 border rounded-lg px-2 cursor-pointer"
           />
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleAvatarUpload}
-          className="mb-4 border rounded-lg px-2 cursor-pointer"
-        />
+        </div>
 
-        <div className="flex flex-col gap-5 w-full">
-          <p>
-            <strong>Name:</strong> {profile.name}
-          </p>
+        <div className="flex flex-col gap-5">
+          <div className="flex gap-5 items-center">
+            {/* <p>
+              <strong>Name:</strong> {profile.name}
+            </p> */}
+            <strong>Name:</strong>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="w-full mb-1 px-2 py-1 border rounded"
+            />
+            {nameError && (
+              <p className="text-red-600 text-sm mb-2">{nameError}</p>
+            )}
+            <button
+              className="bg-blue-600 text-white py-1 px-2 rounded-lg w-60 cursor-pointer"
+              onClick={handleChangeName}
+            >
+              Update Name
+            </button>
+          </div>
           <p>
             <strong>Email:</strong> {profile.email}
           </p>
@@ -605,7 +625,7 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        <div className="mt-6 w-full">
+        {/* <div className="mt-6 w-full">
           <h2 className="text-lg font-semibold mb-2">Update Name</h2>
           <input
             type="text"
@@ -622,18 +642,18 @@ export default function ProfilePage() {
           >
             Update Name
           </button>
-        </div>
+        </div> */}
 
         {provider === "email" && (
           <>
-            <div className="mt-6 w-full">
+            <div className="mt-6 w-full flex flex-col gap-2">
               <h2 className="text-lg font-semibold mb-2">Change Password</h2>
               <input
                 type="password"
                 placeholder="Current password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full mb-2 p-2 border rounded"
+                className="w-full mb-2 py-1 px-2 border rounded"
               />
               <div className="relative w-full">
                 <input
@@ -641,12 +661,12 @@ export default function ProfilePage() {
                   placeholder="New password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full mb-1 p-2 border rounded pr-10"
+                  className="w-full mb-1 py-1 px-2 border rounded pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-2 text-sm text-gray-600"
+                  className="absolute right-2 top-1 text-sm text-gray-600"
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -655,7 +675,7 @@ export default function ProfilePage() {
                 <p className="text-red-600 text-sm mb-2">{passwordError}</p>
               )}
               <button
-                className="bg-purple-600 text-white py-2 px-4 rounded-lg"
+                className="bg-blue-600 text-white w-full py-1 px-2 rounded-lg cursor-pointer"
                 onClick={handleChangePassword}
               >
                 Update Password
@@ -667,7 +687,7 @@ export default function ProfilePage() {
                 Enable Google Login
               </h2>
               <button
-                className="bg-zinc-800 text-white py-2 px-4 rounded-lg"
+                className="bg-zinc-800 text-white cursor-pointer py-1 px-2 rounded-lg"
                 onClick={handleEnableGoogleLogin}
               >
                 Link Google Account
@@ -677,7 +697,7 @@ export default function ProfilePage() {
         )}
 
         {provider === "google" && (
-          <div className="mt-6 w-full">
+          <div className="mt-6 w-full flex flex-col gap-2">
             <h2 className="text-lg font-semibold mb-2">Add Password Login</h2>
             <div className="relative w-full">
               <input
@@ -685,12 +705,12 @@ export default function ProfilePage() {
                 placeholder="Create password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full mb-1 p-2 border rounded pr-10"
+                className="w-full mb-1 py-1 px-2 border rounded pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-2 text-sm text-gray-600"
+                className="absolute right-2 top-1 text-sm text-gray-600"
               >
                 {showPassword ? "🙈" : "👁️"}
               </button>
@@ -699,7 +719,7 @@ export default function ProfilePage() {
               <p className="text-red-600 text-sm mb-2">{passwordError}</p>
             )}
             <button
-              className="bg-purple-600 text-white py-2 px-4 rounded-lg"
+              className="bg-blue-600 text-white cursor-pointer py-1 px-2 rounded-lg"
               onClick={handleChangePassword}
             >
               Set Password
@@ -709,7 +729,7 @@ export default function ProfilePage() {
 
         <div className="mt-6 w-full">
           <button
-            className="bg-red-600 text-white py-2 px-4 rounded-lg cursor-pointer"
+            className="bg-red-600 text-white  py-1 px-2 rounded-lg cursor-pointer"
             onClick={handleDeleteAccount}
           >
             Delete Account

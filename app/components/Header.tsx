@@ -206,15 +206,18 @@ function Header() {
 
   const userName =
     user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "User";
-  const userAvatar = user?.user_metadata?.avatar_url ?? null;
+  const userAvatar =
+    user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
 
   // 🧠 Get current user from URL param
   const searchParams = useSearchParams();
+
   // const participantName = searchParams.get("user") ?? "anonymous";
   const participantName =
     user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "anonymous";
 
-  const participantAvatar = user?.user_metadata?.avatar_url ?? "";
+  const participantAvatar =
+    user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture;
 
   const pathname = usePathname();
   const isInbox = pathname === "/";
@@ -281,7 +284,8 @@ function Header() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        calleeId: selectedConversation.name,
+        // calleeId: selectedConversation.name,
+        calleeId: selectedConversation.id, // ✅ use Supabase user ID
         callerName: participantName,
         callerAvatar,
         roomName,
@@ -294,7 +298,10 @@ function Header() {
     // 🎯 Update Zustand with outgoing call state
     setOutgoingCall({
       calleeName: selectedConversation.name,
-      calleeAvatar: selectedConversation.avatar,
+      calleeId: selectedConversation.id,
+      calleeAvatar:
+        selectedConversation.avatar ??
+        selectedConversation.name.toUpperCase().charAt(0),
       roomName,
       liveKitUrl: data.serverUrl,
       callerToken: data.participantToken,
@@ -316,10 +323,12 @@ function Header() {
   const startAudioCall = async () => {
     if (!selectedConversation) return;
 
-    const callerInfo = messagesArray.find(
-      (msg) => msg.name === participantName
-    );
-    const callerAvatar = callerInfo?.avatar ?? "";
+    // const callerInfo = messagesArray.find(
+    //   (msg) => msg.name === participantName
+    // );
+    // const callerAvatar = callerInfo?.avatar ?? "";
+    const callerAvatar = participantAvatar;
+
     const roomName = generateRoomId();
 
     const res = await fetch(
@@ -331,7 +340,9 @@ function Header() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        calleeId: selectedConversation.name,
+        // calleeId: selectedConversation.name,
+        calleeId: selectedConversation.id, // ✅ use Supabase user ID
+        callerId: user?.id, // ✅ use Supabase user ID
         callerName: participantName,
         callerAvatar,
         roomName,
@@ -343,7 +354,10 @@ function Header() {
 
     setOutgoingCall({
       calleeName: selectedConversation.name,
-      calleeAvatar: selectedConversation.avatar,
+      calleeId: selectedConversation.id,
+      calleeAvatar:
+        selectedConversation.avatar ??
+        selectedConversation.name.toUpperCase().charAt(0),
       roomName,
       liveKitUrl: data.serverUrl,
       callerToken: data.participantToken,
@@ -352,7 +366,9 @@ function Header() {
     });
     console.log("Outgoing call set:", {
       calleeName: selectedConversation.name,
+      calleeId: selectedConversation.id,
       callerName: participantName,
+      callerId: user?.id,
     });
 
     setTimeout(() => {
@@ -369,31 +385,48 @@ function Header() {
   const [searchText, setSearchText] = useState("");
 
   return (
-    <div className="bg-[#09090b] w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800 justify-between">
+    <div className="bg-zinc-950 w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800 justify-between">
       <div>
-        {isLogin ? (
+        {/* {isLogin ? (
           <Link href="/">Login</Link>
         ) : isSignup ? (
           <Link href="/">Signup</Link>
         ) : selectedConversation ? (
           <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            <Image
-              className="w-12 h-12 rounded-full"
-              src={selectedConversation.avatar}
-              alt=""
-            />
-            <span>{selectedConversation.name}</span>
+            {userAvatar ? (
+              <Image
+                className="w-8 h-8 rounded-full"
+                src={userAvatar}
+                alt=""
+                width={40}
+                height={40}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span>{userName}</span>
           </Link>
         ) : (
           <Link href="/" className="hover:opacity-80">
             Messages
+          </Link>
+        )} */}
+        {isLogin ? (
+          <Link href="/">Login</Link>
+        ) : isSignup ? (
+          <Link href="/">Signup</Link>
+        ) : (
+          <Link href="/" className="hover:opacity-80">
+            Home
           </Link>
         )}
       </div>
 
       {/* 🔍 Search Bar */}
       {isInbox && (
-        <div className="border-1 border-[#27272a] h-fit w-fit rounded-full flex-1 mx-4">
+        <div className="border-1 border-zinc-800 h-fit w-fit rounded-full flex-1 mx-4">
           <input
             className="px-4 py-1 w-full rounded-full"
             placeholder="Search..."
@@ -403,8 +436,8 @@ function Header() {
         </div>
       )}
       {/* 📞 Call Controls */}
-      <div className="flex gap-4 text-[#851de0] relative">
-        {isInbox && selectedConversation && (
+      <div className="flex items-center gap-4 text-white relative">
+        {/* {isInbox && selectedConversation && (
           <>
             <Phone
               className="cursor-pointer hover:opacity-50"
@@ -415,38 +448,58 @@ function Header() {
               onClick={startMeeting}
             />
           </>
+        )} */}
+        {user ? (
+          <div
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80"
+            onClick={() => setShowDropdown((prev) => !prev)}
+          >
+            {userAvatar ? (
+              <Image
+                className="w-8 h-8 rounded-full"
+                src={userAvatar}
+                alt=""
+                width={40}
+                height={40}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+        ) : (
+          <Ellipsis
+            className="cursor-pointer hover:opacity-50"
+            onClick={() => setShowDropdown((prev) => !prev)}
+          />
         )}
-
-        <Ellipsis
-          className="cursor-pointer hover:opacity-50"
-          onClick={() => setShowDropdown((prev) => !prev)}
-        />
 
         {showDropdown && (
           <div
-            className="absolute right-0 top-10 bg-zinc-900 border border-zinc-700 rounded-md shadow-lg p-2 z-50 w-40"
+            className="absolute -right-4 top-12 bg-zinc-950 border border-zinc-700 rounded-md shadow-lg p-5 z-50 w-50"
             ref={dropdownRef}
           >
             {user ? (
-              <>
-                <div className="flex items-center gap-2 px-4 py-2">
+              <div className="flex flex-col items-start gap-2">
+                <div className="flex w-full justify-center items-center gap-2 cursor-pointer hover:opacity-50">
                   {userAvatar ? (
                     <Image
                       src={userAvatar}
                       alt={userName}
                       width={40}
                       height={40}
-                      className="w-10 h-10 rounded-full"
+                      className="w-8 h-8 rounded-full"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-purple-700 flex items-center justify-center text-white font-bold">
+                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center font-bold">
                       {userName.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-sm">{userName}</span>
+                  <span className="">{userName}</span>
                 </div>
 
-                <Link href="/profile" className="hover:text-purple-500">
+                <Link href="/profile" className="hover:opacity-50">
                   Profile
                 </Link>
 
@@ -456,11 +509,11 @@ function Header() {
                     await supabase.auth.signOut();
                     window.location.href = "/auth/login"; // or use router.push if preferred
                   }}
-                  className="block px-4 py-2 hover:bg-zinc-800 rounded text-left w-full"
+                  className="hover:opacity-50 cursor-pointer"
                 >
                   Sign out
                 </button>
-              </>
+              </div>
             ) : (
               <>
                 <Link

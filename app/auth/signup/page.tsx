@@ -66,12 +66,12 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col bg-zinc-950">
       <Header />
       <div className="p-6 max-w-md mx-auto flex flex-col w-full h-full justify-center items-center">
         <h1 className="text-xl font-bold mb-4">Sign Up</h1>
         <input
-          className="w-full mb-2 p-2 border-b"
+          className="w-full mb-2 py-1 px-2 border-b"
           type="text"
           placeholder="Name"
           value={name}
@@ -79,14 +79,14 @@ export default function SignupPage() {
         />
 
         <input
-          className="w-full mb-2 p-2 border-b"
+          className="w-full mb-2 py-1 px-2 border-b"
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
-          className="w-full mb-4 p-2 border-b"
+          className="w-full mb-4 py-1 px-2 border-b"
           type="password"
           placeholder="Password"
           value={password}
@@ -98,14 +98,14 @@ export default function SignupPage() {
         )}
 
         <button
-          className="w-full bg-purple-600 text-white py-2 mb-2 rounded-lg cursor-pointer"
+          className="w-full bg-blue-600 text-white py-1 px-2  mb-2 rounded-lg cursor-pointer"
           onClick={handleSignup}
         >
           Sign Up
         </button>
 
         <button
-          className="w-full bg-zinc-800 text-white py-2 rounded-lg cursor-pointer flex items-center justify-center gap-3"
+          className="w-full bg-zinc-800 text-white py-1 px-2  rounded-lg cursor-pointer flex items-center justify-center gap-3"
           onClick={handleGoogleSignup}
           disabled={isGoogleLoading}
         >

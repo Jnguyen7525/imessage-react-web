@@ -1,11 +1,23 @@
 import { sendFCM } from "@/lib/firebase/fcm";
 import { getFCMTokenForUser } from "@/lib/firebase/userStore";
+import createClient from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json();
   const {
     calleeId,
+    callerId,
     callerName,
     callerAvatar,
     roomName,
@@ -26,6 +38,7 @@ export async function POST(req: NextRequest) {
   console.log("Sending payload:", {
     type: "incoming_call",
     callerName,
+    callerId,
     callerAvatar: JSON.stringify(callerAvatar),
     roomName,
     liveKitUrl,
@@ -36,6 +49,7 @@ export async function POST(req: NextRequest) {
   await sendFCM(fcmToken, {
     type: "incoming_call",
     callerName,
+    callerId,
     callerAvatar: JSON.stringify(callerAvatar), // ✅ serialize to string
     roomName,
     liveKitUrl,

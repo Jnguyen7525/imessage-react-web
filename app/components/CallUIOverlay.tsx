@@ -351,8 +351,29 @@ import { useCallSignaling } from "@/hooks/useCallSignaling";
 import React from "react";
 import { useRoomBridgeStore } from "@/store/useRoomBridgeStore";
 import { Room } from "livekit-client";
+import createClient from "@/lib/supabase/client";
+import { useConversationStore } from "@/store/useConversationStore";
 
 export default function CallUIOverlay() {
+  const [participantName, setParticipantName] = React.useState("anonymous");
+  const [userId, setUserId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data.user;
+      if (user) {
+        setUserId(user.id); // ✅ store caller ID
+        const name =
+          user.user_metadata?.full_name ??
+          user.user_metadata?.name ??
+          user.email?.split("@")[0] ??
+          "anonymous";
+        setParticipantName(name);
+      }
+    });
+  }, []);
+
   useCallSignaling(); // ✅ Listens for FCM messages and updates Zustand
 
   const room = useRoomBridgeStore((s) => s.room);
@@ -361,10 +382,16 @@ export default function CallUIOverlay() {
   const outgoingCall = useCallStore((s) => s.outgoingCall);
   const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
 
+  const selectedConversation = useConversationStore(
+    (state) => state.selectedConversation
+  );
+
+  console.log("👀 CallUIOverlay mounted. Incoming call:", incomingCall);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const participantName = searchParams.get("user") ?? "anonymous";
+  // const participantName = searchParams.get("user") ?? "anonymous";
 
   const [showRoomSwitchModal, setShowRoomSwitchModal] = React.useState(false);
   const [pendingCallData, setPendingCallData] = React.useState<null | {
@@ -480,7 +507,9 @@ export default function CallUIOverlay() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          callerId: incomingCall.callerName,
+          // callerId: incomingCall.callerName,
+          // callerId: userId ?? "", // ✅ FIXED
+          callerId: incomingCall.callerId,
           roomName: incomingCall.roomName,
           liveKitUrl: incomingCall.liveKitUrl,
           callerToken: incomingCall.callerToken,
@@ -546,7 +575,7 @@ export default function CallUIOverlay() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                callerId: incomingCall.callerName,
+                callerId: incomingCall.callerId,
                 roomName: incomingCall.roomName,
                 manualCancel: false, // ✅ flag for manual cancel
               }),
@@ -595,6 +624,8 @@ export default function CallUIOverlay() {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         callerId: pendingCallData.callerName,
+                        // callerId: userId ?? "", // ✅ FIXED
+
                         roomName: pendingCallData.roomName,
                         liveKitUrl: pendingCallData.liveKitUrl,
                         callerToken: incomingCall?.callerToken,
@@ -622,6 +653,7 @@ export default function CallUIOverlay() {
     return (
       <OutgoingCallStatus
         calleeName={outgoingCall.calleeName}
+        calleeId={outgoingCall.calleeId}
         calleeAvatar={outgoingCall.calleeAvatar}
       />
     );

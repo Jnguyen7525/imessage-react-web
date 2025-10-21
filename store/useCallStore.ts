@@ -4,6 +4,7 @@ import { create } from "zustand";
 type CallState = {
   incomingCall: null | {
     callerName: string;
+    callerId: string;
     callerAvatar: string;
     roomName: string;
     liveKitUrl: string;
@@ -13,6 +14,7 @@ type CallState = {
 
   outgoingCall: null | {
     calleeName: string;
+    calleeId: string;
     calleeAvatar: string;
     roomName: string;
     liveKitUrl: string;

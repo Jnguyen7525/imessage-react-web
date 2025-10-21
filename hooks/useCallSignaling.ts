@@ -601,13 +601,34 @@ import { useCallStore } from "@/store/useCallStore";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { onMessage } from "firebase/messaging";
 import { messaging } from "@/lib/firebase/firebaseMessaging";
+import createClient from "@/lib/supabase/client";
 
 export function useCallSignaling() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const participantName = searchParams.get("user") ?? "anonymous";
+  // const participantName = searchParams.get("user") ?? "anonymous";
 
+  const [participantName, setParticipantName] = React.useState("anonymous");
+  const [userId, setUserId] = React.useState<string | null>(null); // ✅ Track user ID
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data.user;
+      if (user) {
+        setUserId(user.id); // ✅ Store user ID
+        const name =
+          user.user_metadata?.full_name ??
+          user.user_metadata?.name ??
+          user.email?.split("@")[0] ??
+          "anonymous";
+        setParticipantName(name);
+      }
+    });
+  }, []);
+
+  const incomingCall = useCallStore((s) => s.incomingCall);
   const setIncomingCall = useCallStore((s) => s.setIncomingCall);
   const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
   const outgoingCall = useCallStore((s) => s.outgoingCall);
@@ -632,7 +653,8 @@ export function useCallSignaling() {
       return;
     }
 
-    if (!payload || payload.recipientId !== participantName) return;
+    // if (!payload || payload.recipientId !== participantName) return;
+    if (!payload || payload.recipientId !== userId) return; // ✅ FIXED
 
     console.log(`✅ Incoming call received via ${source}:`, payload);
 
@@ -643,8 +665,16 @@ export function useCallSignaling() {
       console.warn("Failed to parse callerAvatar:", err);
     }
 
+    console.log(
+      "Incoming call from:",
+      payload.callerName,
+      "callerid:",
+      payload.callerId
+    );
+
     setIncomingCall({
       callerName: payload.callerName,
+      callerId: payload.callerId,
       callerAvatar,
       roomName: payload.roomName,
       liveKitUrl: payload.liveKitUrl,
@@ -669,7 +699,17 @@ export function useCallSignaling() {
 
   // ✅ Shared handler for call_accepted (from FCM or service worker)
   const handleCallAccepted = (payload: any, source: "fcm" | "sw") => {
-    if (!payload || payload.recipientId !== participantName) return;
+    // if (!payload || payload.recipientId !== participantName) return;
+    if (!payload || payload.recipientId !== userId) return; // ✅ FIXED
+
+    console.log("📥 Received call_accepted payload:", payload);
+    console.log(
+      "🧾 Matching recipientId:",
+      payload.recipientId,
+      "vs userId:",
+      userId
+    );
+
     const isCaller = outgoingCall?.callerName === participantName;
 
     console.log(`✅ call_accepted received via ${source}:`, payload);
@@ -711,8 +751,12 @@ export function useCallSignaling() {
 
     const handleSWMessage = (event: MessageEvent) => {
       if (document.visibilityState === "visible") {
-        console.log("👀 Tab is active — ignoring service worker message");
-        return;
+        // console.log("👀 Tab is active — ignoring service worker message");
+        // return;
+        // ! need to check this later for test i'm handling it but maybe it should just skip and return like above in production
+        console.log(
+          "📨 Handling service worker message regardless of tab visibility"
+        );
       }
 
       const raw = event.data || {};
@@ -771,7 +815,8 @@ export function useCallSignaling() {
 
     const handleFCM = (payload: any) => {
       const data = payload.data;
-      if (!data || data.recipientId !== participantName) return;
+      // if (!data || data.recipientId !== participantName) return;
+      if (!data || data.recipientId !== userId) return; // ✅ FIXED
 
       if (data.type === "ping") {
         console.log("✅ Ping via FCM:", data);
