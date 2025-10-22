@@ -286,6 +286,7 @@ function Header() {
       body: JSON.stringify({
         // calleeId: selectedConversation.name,
         calleeId: selectedConversation.id, // ✅ use Supabase user ID
+        callerId: user?.id, // ✅ use Supabase user ID
         callerName: participantName,
         callerAvatar,
         roomName,

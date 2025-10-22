@@ -63,11 +63,13 @@ import { RoomEvent, Track } from "livekit-client";
 import { EllipsisVertical, Phone, UserMinus2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { CustomParticipantTile } from "./CustomParticipantTile";
 import { useRoomBridgeStore } from "@/store/useRoomBridgeStore";
 import createClient from "@/lib/supabase/client";
+import { useConversationStore } from "@/store/useConversationStore";
+import { User } from "@supabase/supabase-js";
 
 /**
  * @public
@@ -123,6 +125,16 @@ export function CustomVideoConference({
   const [participantName, setParticipantName] = React.useState("anonymous");
   const [participantAvatar, setParticipantAvatar] = React.useState("");
 
+  const setSelectedConversation = useConversationStore(
+    (state) => state.setSelectedConversation
+  );
+  const selectedConversation = useConversationStore(
+    (state) => state.selectedConversation
+  );
+  const setOutgoingCall = useCallStore((state) => state.setOutgoingCall);
+  const { contacts, setContacts } = useConversationStore();
+  const [user, setUser] = useState<User | null>(null);
+
   React.useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
@@ -135,8 +147,114 @@ export function CustomVideoConference({
       const avatar = user?.user_metadata?.avatar_url ?? "";
       setParticipantName(name);
       setParticipantAvatar(avatar);
+      setUser(user);
     });
   }, []);
+
+  const handleSelectMessage = async (id: string) => {
+    const selected = contacts.find((msg) => msg.id === id);
+    console.log("Found selected:", selected);
+    if (selected) {
+      const callerAvatar = participantAvatar;
+      setSelectedConversation(selected);
+      const res = await fetch(
+        `/api/connection-details?roomName=${roomName}&participantName=${participantName}`
+      );
+      const data = await res.json();
+
+      // 🚀 Send FCM push to callee
+      await fetch("/api/send-call-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // calleeId: selectedConversation.name,
+          calleeId: selected.id, // ✅ use Supabase user ID
+          callerId: user?.id, // ✅ use Supabase user ID
+          callerName: participantName,
+          callerAvatar,
+          roomName,
+          liveKitUrl: data.serverUrl,
+          audioOnly: true,
+          callerToken: data.participantToken, // ✅ Add this
+        }),
+      });
+
+      // 🎯 Update Zustand with outgoing call state
+      setOutgoingCall({
+        calleeName: selected.name,
+        calleeId: selected.id,
+        calleeAvatar: selected.avatar ?? selected.name.toUpperCase().charAt(0),
+        roomName,
+        liveKitUrl: data.serverUrl,
+        callerToken: data.participantToken,
+        callerName: participantName,
+        audioOnly: true,
+      });
+
+      // ⏱️ Timeout after 30 seconds if unanswered
+      setTimeout(() => {
+        const currentCall = useCallStore.getState().outgoingCall;
+        if (currentCall?.roomName === roomName) {
+          console.log("Call timed out — no response");
+          useCallStore.getState().clearOutgoingCall();
+        }
+      }, 30000);
+    }
+  };
+
+  useEffect(() => {
+    const fetchContacts = async () => {
+      const supabase = createClient();
+
+      // 🔍 Step 1: Get current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("❌ Error fetching current user:", userError.message);
+        return;
+      }
+
+      if (!user) {
+        console.warn("⚠️ No authenticated user found");
+        return;
+      }
+
+      console.log("✅ Current user:", user.id, user.email);
+
+      // 🔍 Step 2: Query other users
+      const { data: users, error: queryError } = await supabase
+        .from("users") // or "public.users" if that's your table
+        .select("id, name, avatar_url")
+        .neq("id", user.id);
+
+      if (queryError) {
+        console.error("❌ Supabase query error:", queryError.message);
+        return;
+      }
+
+      if (!users || users.length === 0) {
+        console.warn("⚠️ No other users returned from Supabase");
+        return;
+      }
+
+      console.log("✅ Fetched users:", users);
+
+      // 🔍 Step 3: Format and store
+      const formatted = users.map((u) => ({
+        id: u.id,
+        name: u.name,
+        avatar: u.avatar_url ?? "",
+      }));
+
+      console.log("✅ Formatted contacts:", formatted);
+      setContacts(formatted);
+    };
+
+    fetchContacts();
+  }, [setContacts]);
 
   React.useEffect(() => {
     // ✅ Reset layout and track state when room changes
@@ -357,7 +475,7 @@ export function CustomVideoConference({
                   {/* Contacts Tab */}
                   {activeTab === "contacts" && (
                     <ul className="space-y-3">
-                      {messagesArray.map((msg) => (
+                      {/* {messagesArray.map((msg) => (
                         <li
                           key={msg.id}
                           className="flex items-center justify-between gap-2"
@@ -444,6 +562,26 @@ export function CustomVideoConference({
                             <Phone size={22} />
                           </button>
                         </li>
+                      ))} */}
+                      {contacts.map((contact) => (
+                        <button
+                          key={contact.id}
+                          className="flex items-center gap-3 px-4 py-2 w-full hover:opacity-50 rounded cursor-pointer"
+                          onClick={() => handleSelectMessage(contact.id)}
+                        >
+                          {contact.avatar ? (
+                            <img
+                              src={contact.avatar}
+                              alt={contact.name}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
+                              {contact.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span>{contact.name}</span>
+                        </button>
                       ))}
                     </ul>
                   )}
