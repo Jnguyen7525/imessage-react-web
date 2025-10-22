@@ -111,9 +111,9 @@ export function CustomVideoConference({
   ...props
 }: VideoConferenceProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<
-    "contacts" | "participants" | "rooms"
-  >("contacts");
+  const [activeTab, setActiveTab] = React.useState<"contacts" | "participants">(
+    "contacts"
+  );
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const router = useRouter();
@@ -338,8 +338,8 @@ export function CustomVideoConference({
                 }`}
               >
                 <div className={`${sidebarOpen ? "block" : "hidden"}`}>
-                  <div className="flex justify-between mb-4">
-                    {["contacts", "participants", "rooms"].map((tab) => (
+                  <div className="flex  gap-2 mb-4">
+                    {["contacts", "participants"].map((tab) => (
                       <button
                         key={tab}
                         className={`px-3 py-1 rounded-lg cursor-pointer ${
@@ -419,6 +419,7 @@ export function CustomVideoConference({
                               // 🎯 Update Zustand with outgoing call state
                               useCallStore.getState().setOutgoingCall({
                                 calleeName: msg.name,
+                                calleeId: msg.id,
                                 calleeAvatar: msg.avatar,
                                 roomName,
                                 liveKitUrl: data.serverUrl,
@@ -495,28 +496,6 @@ export function CustomVideoConference({
                   )}
 
                   {/* Rooms Tab */}
-
-                  {activeTab === "rooms" && (
-                    <ul className="space-y-3">
-                      <li className="font-semibold">
-                        Current Room: {room.name}
-                      </li>
-                      {/* Replace with actual room list if available */}
-                      {["Team Sync", "Design Review", "Dev Standup"].map(
-                        (roomName) => (
-                          <li
-                            key={roomName}
-                            className="flex justify-between items-center"
-                          >
-                            <span>{roomName}</span>
-                            <button className="text-[#851de0] hover:opacity-70 text-sm">
-                              Join
-                            </button>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  )}
                 </div>
               </div>
               {/* 🟢 Main conference area */}
