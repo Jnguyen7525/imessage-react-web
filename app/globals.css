@@ -1,4 +1,4 @@
 /* !seem to be using and importing other styles/global.css at root of app in layout.tsx instead of this one so maybe can delete this later */
 
-/* @import "tailwindcss";
-@import "tailwind-scrollbar-hide/v4"; */
+@import "tailwindcss";
+@import "tailwind-scrollbar-hide/v4";

@@ -14,6 +14,7 @@ import { registerFCMToken } from "@/lib/firebase/registerFCMtoken";
 import useUser from "@/hooks/useUser";
 import createClient from "@/lib/supabase/client";
 import ChatTopBar from "./components/ChatTopBar";
+import Phone from "./components/Phone";
 
 export default function Home() {
   const { loading, error, user } = useUser();
@@ -187,6 +188,9 @@ export default function Home() {
         <Header />
         {/* 🧱 Split layout below */}
         <div className="flex min-h-0 flex-1 w-full">
+          <div className="flex  absolute bottom-5 right-5">
+            <Phone />
+          </div>
           {/* Sidebar / Inbox */}
           <div className="w-[350px] bg-zinc-950 text-white flex flex-col  border-r border-zinc-800 gap-5">
             {/* Scrollable message list */}
