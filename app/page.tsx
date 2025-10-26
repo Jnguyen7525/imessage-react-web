@@ -3,7 +3,7 @@
 import Header from "@/app/components/Header";
 import { Message } from "./components/Message";
 import { ConversationMessage } from "./components/ConversationMessage";
-import { AudioLines, LoaderCircle, Plus } from "lucide-react";
+import { AudioLines, LoaderCircle, Plus, X } from "lucide-react";
 import { conversationMessages, messagesArray } from "@/utils/messages";
 import { useConversationStore } from "@/store/useConversationStore";
 
@@ -29,7 +29,7 @@ export default function Home() {
     (state) => state.selectedConversation
   );
 
-  const { contacts, setContacts } = useConversationStore();
+  const { contacts, setContacts, showPhone } = useConversationStore();
 
   const [search, setSearch] = useState("");
   const [messages, setMessages] = useState(messagesArray);
@@ -188,9 +188,23 @@ export default function Home() {
         <Header />
         {/* 🧱 Split layout below */}
         <div className="flex min-h-0 flex-1 w-full">
-          <div className="flex  absolute bottom-5 right-5">
-            <Phone />
-          </div>
+          {/* Floating Phone Component */}
+          {showPhone && (
+            <div className="flex z-50 absolute bottom-5 right-5">
+              <div className="flex flex-col w-fit h-fit bg-transparent">
+                {/* Top bar with X icon aligned right */}
+                <div className="flex justify-end">
+                  <button className="text-red-500 border border-zinc-800 rounded-full bg-zinc-950  cursor-pointer p-1">
+                    <X size={30} />
+                  </button>
+                </div>
+
+                {/* Phone UI */}
+                <Phone />
+              </div>
+            </div>
+          )}
+
           {/* Sidebar / Inbox */}
           <div className="w-[350px] bg-zinc-950 text-white flex flex-col  border-r border-zinc-800 gap-5">
             {/* Scrollable message list */}

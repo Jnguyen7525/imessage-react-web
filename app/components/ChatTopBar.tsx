@@ -1,7 +1,7 @@
 "use client";
 
 import { useConversationStore } from "@/store/useConversationStore";
-import { Ellipsis, Phone, Video } from "lucide-react";
+import { Ellipsis, Phone, Smartphone, Video } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
@@ -45,6 +45,8 @@ function ChatTopBar() {
 
   // 🧠 Zustand state for outgoing call
   const setOutgoingCall = useCallStore((state) => state.setOutgoingCall);
+
+  const { showPhone, setShowPhone } = useConversationStore();
 
   // 🧠 Zustand state for selected contact
   const selectedConversation = useConversationStore(
@@ -252,6 +254,12 @@ function ChatTopBar() {
       <div className="flex gap-4 text-white relative">
         {isInbox && selectedConversation && (
           <>
+            <Smartphone
+              className={`${
+                showPhone ? " scale-125 text-blue-500" : "opacity-100"
+              } cursor-pointer hover:opacity-50`}
+              onClick={() => setShowPhone(!showPhone)}
+            />
             <Phone
               className="cursor-pointer hover:opacity-50"
               onClick={startAudioCall}

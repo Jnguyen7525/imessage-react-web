@@ -32,13 +32,18 @@ type ConversationState = {
   setContacts: (contacts: Contact[]) => void;
 };
 
+type PhoneState = {
+  showPhone: boolean;
+  setShowPhone: (visible: boolean) => void;
+};
+
 // export const useConversationStore = create<ConversationState>((set) => ({
 //   selectedConversation: undefined,
 //   setSelectedConversation: (conv) => set({ selectedConversation: conv }),
 // }));
 
 export const useConversationStore = create<
-  ConversationState & ConversationUIState
+  ConversationState & ConversationUIState & PhoneState
 >((set) => ({
   selectedConversation: undefined,
   setSelectedConversation: (conv) => set({ selectedConversation: conv }),
@@ -48,4 +53,6 @@ export const useConversationStore = create<
     set((state) => ({ showOptions: !state.showOptions })),
   contacts: [],
   setContacts: (contacts) => set({ contacts }),
+  showPhone: false,
+  setShowPhone: (visible) => set({ showPhone: visible }),
 }));
