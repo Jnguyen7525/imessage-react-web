@@ -566,7 +566,7 @@ export default function ProfilePage() {
   const provider = user.app_metadata?.provider;
 
   return (
-    <div className="w-full h-full flex flex-col bg-black">
+    <div className="w-full h-full flex flex-col bg-gradient-to-t from-slate-800 to-slate-950">
       <Header />
       <div className="p-6 max-w-md mx-auto flex flex-col w-full h-full justify-start items-start">
         <h1 className="text-2xl font-bold mb-4">Your Profile</h1>

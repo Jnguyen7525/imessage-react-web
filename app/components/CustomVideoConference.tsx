@@ -125,14 +125,17 @@ export function CustomVideoConference({
   const [participantName, setParticipantName] = React.useState("anonymous");
   const [participantAvatar, setParticipantAvatar] = React.useState("");
 
-  const setSelectedConversation = useConversationStore(
-    (state) => state.setSelectedConversation
-  );
-  const selectedConversation = useConversationStore(
-    (state) => state.selectedConversation
-  );
+  // const setSelectedConversation = useConversationStore(
+  //   (state) => state.setSelectedConversation
+  // );
+  // const selectedConversation = useConversationStore(
+  //   (state) => state.selectedConversation
+  // );
+  // const { contacts, setContacts } = useConversationStore();
+  const { contacts, setContacts, setSelectedConversation } =
+    useConversationStore();
   const setOutgoingCall = useCallStore((state) => state.setOutgoingCall);
-  const { contacts, setContacts } = useConversationStore();
+
   const [user, setUser] = useState<User | null>(null);
 
   React.useEffect(() => {
@@ -566,21 +569,24 @@ export function CustomVideoConference({
                       {contacts.map((contact) => (
                         <button
                           key={contact.id}
-                          className="flex items-center gap-3 px-4 py-2 w-full hover:opacity-50 rounded cursor-pointer"
+                          className="flex items-center justify-between gap-3 px-4 py-2 w-full hover:opacity-50 rounded cursor-pointer"
                           onClick={() => handleSelectMessage(contact.id)}
                         >
-                          {contact.avatar ? (
-                            <img
-                              src={contact.avatar}
-                              alt={contact.name}
-                              className="w-8 h-8 rounded-full"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
-                              {contact.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <span>{contact.name}</span>
+                          <div className="flex items-center justify-center gap-5">
+                            {contact.avatar ? (
+                              <img
+                                src={contact.avatar}
+                                alt={contact.name}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
+                                {contact.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span>{contact.name}</span>
+                          </div>
+                          <Phone size={22} />
                         </button>
                       ))}
                     </ul>

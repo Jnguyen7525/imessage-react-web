@@ -5,22 +5,22 @@ import { conversationMessages } from "@/utils/messages";
 
 const Phone: React.FC = () => {
   return (
-    <div className="relative w-fit h-[900px] max-w-[90vw] max-h-[90vh] rounded-[5rem] shadow-2xl font-sans text-white flex flex-col border-[3px] border-zinc-900">
-      <div className=" w-[400px] h-[900px] max-w-[90vw] max-h-[90vh] overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-[5rem] shadow-2xl font-sans text-white flex flex-col border-[6px] border-black ">
+    <div className="relative w-fit h-[900px] max-w-[90vw] max-h-[90vh] rounded-[5rem] shadow-2xl font-sans text-white flex flex-col border-[3px] bg-black border-slate-800">
+      <div className=" w-[400px] h-[900px] max-w-[90vw] max-h-[90vh] overflow-hidden rounded-[5rem] shadow-2xl font-sans text-white flex flex-col border-[6px] border-black ">
         {/* Side Buttons */}
         {/* Volume Buttons (Left) */}
-        <div className="absolute left-[-6px] top-[160px] w-[4px] h-[40px] bg-zinc-800 rounded-xs" />
-        <div className="absolute left-[-6px] top-[220px] w-[4px] h-[60px] bg-zinc-800 rounded-xs" />
-        <div className="absolute left-[-6px] top-[300px] w-[4px] h-[60px] bg-zinc-800 rounded-xs" />
+        <div className="absolute left-[-6px] top-[160px] w-[4px] h-[40px] bg-slate-800 rounded-xs" />
+        <div className="absolute left-[-6px] top-[220px] w-[4px] h-[60px] bg-slate-800 rounded-xs" />
+        <div className="absolute left-[-6px] top-[300px] w-[4px] h-[60px] bg-slate-800 rounded-xs" />
 
         {/* Power Button (Right) */}
-        <div className="absolute right-[-6px] top-[250px] w-[4px] h-[80px] bg-zinc-800 rounded-xs" />
+        <div className="absolute right-[-6px] top-[250px] w-[4px] h-[80px] bg-slate-800 rounded-xs" />
 
-        <div className="absolute right-[-6px] bottom-[250px] w-[4px] h-[80px] bg-zinc-800 rounded-xs" />
+        <div className="absolute right-[-6px] bottom-[250px] w-[4px] h-[80px] bg-slate-800 rounded-xs" />
 
         {/* Notch */}
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 w-[120px] h-[30px] bg-black rounded-full z-10 flex items-center justify-end pr-2 border border-zinc-800 ">
-          <div className="bg-black border border-zinc-800 w-2 h-2 rounded-full"></div>
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 w-[120px] h-[30px] bg-black rounded-full z-10 flex items-center justify-end pr-2 border border-slate-800 ">
+          <div className="bg-black border border-slate-800 w-2 h-2 rounded-full"></div>
         </div>
 
         {/* Status Icons (Top Right) */}
@@ -58,7 +58,7 @@ const Phone: React.FC = () => {
         </div>
 
         {/* Screen */}
-        <div className="flex flex-col flex-1 pt-14 px-4 bg-gradient-to-t from-zinc-950 to-zinc-900 overflow-hidden">
+        <div className="flex flex-col flex-1 pt-14 bg-gradient-to-t from-slate-800 to-slate-950 overflow-hidden">
           {/* Scrollable messages */}
           <div className="flex-1 flex flex-col overflow-hidden justify-between text-white">
             <div className="flex flex-col overflow-y-auto scrollbar-hide gap-2 p-10">
@@ -68,7 +68,7 @@ const Phone: React.FC = () => {
             </div>
 
             {/* Input Bar */}
-            <div className="px-4 pb-4">
+            <div className="px-8 pb-4">
               <div className="flex items-center">
                 <button>
                   <Plus size={24} className="cursor-pointer hover:opacity-50" />

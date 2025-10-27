@@ -95,7 +95,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-zinc-950">
+    <div className="w-full h-full flex flex-col bg-gradient-to-t from-slate-800 to-slate-950">
       <Header />
       <div className="p-6 max-w-md mx-auto flex flex-col w-full h-full justify-center items-center">
         <h1 className="text-xl font-bold mb-4">Login</h1>

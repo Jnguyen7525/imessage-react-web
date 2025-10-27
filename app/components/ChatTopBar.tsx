@@ -211,7 +211,7 @@ function ChatTopBar() {
   const [searchText, setSearchText] = useState("");
 
   return (
-    <div className="bg-zinc-950 w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800 justify-between">
+    <div className="bg-gradient-to-t from-slate-800 to-slate-950 w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800 justify-between">
       <div>
         {isLogin ? (
           <Link href="/">Login</Link>
@@ -241,7 +241,7 @@ function ChatTopBar() {
 
       {/* 🔍 Search Bar */}
       {isInbox && (
-        <div className="border-1 border-zinc-800 h-fit w-fit rounded-full flex-1 mx-4">
+        <div className="border-1 bg-slate-900 border-slate-600 h-fit w-fit rounded-full flex-1 mx-4">
           <input
             className="px-4 py-1 w-full rounded-full"
             placeholder="Search This Chat..."

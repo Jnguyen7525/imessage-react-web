@@ -378,9 +378,11 @@ export default function CallUIOverlay() {
 
   const room = useRoomBridgeStore((s) => s.room);
 
-  const incomingCall = useCallStore((s) => s.incomingCall);
-  const outgoingCall = useCallStore((s) => s.outgoingCall);
-  const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
+  const { incomingCall, outgoingCall, clearIncomingCall } = useCallStore();
+
+  // const incomingCall = useCallStore((s) => s.incomingCall);
+  // const outgoingCall = useCallStore((s) => s.outgoingCall);
+  // const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
 
   const selectedConversation = useConversationStore(
     (state) => state.selectedConversation
