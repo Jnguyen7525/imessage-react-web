@@ -1,7 +1,7 @@
 import { create } from "zustand";
 // import { ImageSourcePropType } from 'react-native';
 
-type ChatContext = {
+export type ChatContext = {
   contact: Contact;
   chat_id: string;
 };
@@ -35,8 +35,10 @@ type ConversationState = {
   // selectedConversation: Contact | undefined;
   // setSelectedConversation: (conv: Contact | undefined) => void;
 
-  contacts: Contact[];
-  setContacts: (contacts: Contact[]) => void;
+  // contacts: Contact[];
+  // setContacts: (contacts: Contact[]) => void;
+  contacts: ChatContext[];
+  setContacts: (contacts: ChatContext[]) => void;
 };
 
 type PhoneState = {

@@ -3,7 +3,10 @@
 import Header from "@/app/components/Header";
 import { ConversationMessage } from "./components/ConversationMessage";
 import { AudioLines, LoaderCircle, Plus, Send, X } from "lucide-react";
-import { useConversationStore } from "@/store/useConversationStore";
+import {
+  ChatContext,
+  useConversationStore,
+} from "@/store/useConversationStore";
 
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -44,6 +47,7 @@ export default function Home() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [typingIndicator, setTypingIndicator] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -61,6 +65,12 @@ export default function Home() {
     const chat_id = await findOrCreateChat(contact.id);
     if (!chat_id) return;
     setSelectedConversation({ contact, chat_id });
+    // reset unread count on opening chat
+
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [chat_id]: 0,
+    }));
   };
 
   const handleSend = async () => {
@@ -399,6 +409,17 @@ export default function Home() {
               }
             }, 500);
           }
+          // get unread count for badge
+          if (
+            message.sender_id !== user.id &&
+            !message.read_at &&
+            message.chat_id !== selectedConversation?.chat_id
+          ) {
+            setUnreadCounts((prev) => ({
+              ...prev,
+              [message.chat_id]: (prev[message.chat_id] || 0) + 1,
+            }));
+          }
         }
       )
 
@@ -451,11 +472,25 @@ export default function Home() {
         return;
       }
 
-      const formatted = users.map((u) => ({
-        id: u.id,
-        name: u.name,
-        avatar: u.avatar_url ?? "",
-      }));
+      // const formatted = users.map((u) => ({
+      //   id: u.id,
+      //   name: u.name,
+      //   avatar: u.avatar_url ?? "",
+      // }));
+
+      const formatted: ChatContext[] = await Promise.all(
+        users.map(async (u) => {
+          const chat_id = await findOrCreateChat(u.id);
+          return {
+            contact: {
+              id: u.id,
+              name: u.name,
+              avatar: u.avatar_url ?? "",
+            },
+            chat_id: chat_id ?? "", // fallback if null
+          };
+        })
+      );
 
       setContacts(formatted);
     };
@@ -490,29 +525,6 @@ export default function Home() {
 
     register();
   }, []);
-
-  const handleTyping = async () => {
-    console.log("✍️ handleTyping triggered");
-
-    if (!selectedConversation?.chat_id || !user?.id) {
-      console.warn("⚠️ Missing chat_id or user.id");
-      return;
-    }
-
-    const supabase = createClient();
-    const { error } = await supabase.from("typing_status").upsert({
-      chat_id: selectedConversation.chat_id,
-      user_id: user.id,
-      is_typing: true,
-      updated_at: new Date().toISOString(),
-    });
-
-    if (error) {
-      console.error("❌ Failed to upsert typing status:", error.message);
-    } else {
-      console.log("✅ Typing status upserted");
-    }
-  };
 
   async function updateTypingStatus({
     message,
@@ -651,7 +663,7 @@ export default function Home() {
           <div className="w-[350px] bg-slate-950 text-white flex flex-col  border-r border-slate-600 gap-5">
             {/* Scrollable message list */}
             <div className="flex-1 overflow-y-auto scrollbar-hide mt-5 gap-5 flex flex-col">
-              {contacts.map((contact) => (
+              {contacts.map(({ contact, chat_id }) => (
                 <button
                   key={contact.id}
                   className="flex items-center gap-3 px-4 py-2 w-full hover:opacity-50 rounded cursor-pointer"
@@ -668,7 +680,14 @@ export default function Home() {
                       {contact.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span>{contact.name}</span>
+                  <span className="flex gap-1 items-center">
+                    <span>{contact.name}</span>
+                    {unreadCounts[chat_id] > 0 && (
+                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                        {unreadCounts[chat_id]}
+                      </span>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>
