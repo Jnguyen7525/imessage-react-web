@@ -106,7 +106,7 @@ function ChatTopBar() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         // calleeId: selectedConversation.name,
-        calleeId: selectedConversation.id, // ✅ use Supabase user ID
+        calleeId: selectedConversation.contact.id, // ✅ use Supabase user ID
         callerId: user?.id, // ✅ use Supabase user ID
         callerName: participantName,
         callerAvatar,
@@ -118,11 +118,11 @@ function ChatTopBar() {
     });
 
     setOutgoingCall({
-      calleeName: selectedConversation.name,
-      calleeId: selectedConversation.id,
+      calleeName: selectedConversation.contact.name,
+      calleeId: selectedConversation.contact.id,
       calleeAvatar:
-        selectedConversation.avatar ??
-        selectedConversation.name.toUpperCase().charAt(0),
+        selectedConversation.contact.avatar ??
+        selectedConversation.contact.name.toUpperCase().charAt(0),
       roomName,
       liveKitUrl: data.serverUrl,
       callerToken: data.participantToken,
@@ -130,8 +130,8 @@ function ChatTopBar() {
       audioOnly: false,
     });
     console.log("Outgoing call set:", {
-      calleeName: selectedConversation.name,
-      calleeId: selectedConversation.id,
+      calleeName: selectedConversation.contact.name,
+      calleeId: selectedConversation.contact.id,
       callerName: participantName,
       callerId: user?.id,
     });
@@ -167,7 +167,7 @@ function ChatTopBar() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         // calleeId: selectedConversation.name,
-        calleeId: selectedConversation.id, // ✅ use Supabase user ID
+        calleeId: selectedConversation.contact.id, // ✅ use Supabase user ID
         callerId: user?.id, // ✅ use Supabase user ID
         callerName: participantName,
         callerAvatar,
@@ -179,11 +179,11 @@ function ChatTopBar() {
     });
 
     setOutgoingCall({
-      calleeName: selectedConversation.name,
-      calleeId: selectedConversation.id,
+      calleeName: selectedConversation.contact.name,
+      calleeId: selectedConversation.contact.id,
       calleeAvatar:
-        selectedConversation.avatar ??
-        selectedConversation.name.toUpperCase().charAt(0),
+        selectedConversation.contact.avatar ??
+        selectedConversation.contact.name.toUpperCase().charAt(0),
       roomName,
       liveKitUrl: data.serverUrl,
       callerToken: data.participantToken,
@@ -191,8 +191,8 @@ function ChatTopBar() {
       audioOnly: true,
     });
     console.log("Outgoing call set:", {
-      calleeName: selectedConversation.name,
-      calleeId: selectedConversation.id,
+      calleeName: selectedConversation.contact.name,
+      calleeId: selectedConversation.contact.id,
       callerName: participantName,
       callerId: user?.id,
     });
@@ -219,18 +219,18 @@ function ChatTopBar() {
           <Link href="/">Signup</Link>
         ) : selectedConversation ? (
           <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            {selectedConversation.avatar ? (
+            {selectedConversation.contact.avatar ? (
               <Image
                 className="w-12 h-12 rounded-full"
-                src={selectedConversation.avatar}
+                src={selectedConversation.contact.avatar}
                 alt=""
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
-                {selectedConversation.name.charAt(0).toUpperCase()}
+                {selectedConversation.contact.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <span>{selectedConversation.name}</span>
+            <span>{selectedConversation.contact.name}</span>
           </Link>
         ) : (
           <Link href="/" className="hover:opacity-80">
@@ -283,20 +283,20 @@ function ChatTopBar() {
           >
             <div className="flex flex-col items-start gap-2">
               <div className="flex w-full justify-center items-center gap-2 cursor-pointer hover:opacity-50">
-                {selectedConversation?.avatar ? (
+                {selectedConversation?.contact.avatar ? (
                   <Image
-                    src={selectedConversation.avatar}
-                    alt={selectedConversation?.name}
+                    src={selectedConversation.contact.avatar}
+                    alt={selectedConversation?.contact.name}
                     width={40}
                     height={40}
                     className="w-8 h-8 rounded-full"
                   />
                 ) : (
                   <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center font-bold">
-                    {selectedConversation?.name.charAt(0).toUpperCase()}
+                    {selectedConversation?.contact.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="">{selectedConversation?.name}</span>
+                <span className="">{selectedConversation?.contact.name}</span>
               </div>
 
               <Link href="/profile" className="hover:opacity-50">

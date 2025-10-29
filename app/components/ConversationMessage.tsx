@@ -209,10 +209,17 @@ export const ConversationMessage = ({
         <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
           <span>{dayjs(data.created_at).format("HH:mm")}</span>
           {isSender && (
-            <span>
-              {data.status === "sent" && "✓ Sent"}
-              {data.status === "delivered" && "✓✓ Delivered"}
-              {data.status === "read" && "✓✓✓ Read"}
+            // <span>
+            //   {data.status === "sent" && "✓ Sent"}
+            //   {data.status === "delivered" && "✓✓ Delivered"}
+            //   {data.status === "read" && "✓✓✓ Read"}
+            // </span>
+            <span className="text-xs text-gray-400">
+              {data.status === "read"
+                ? "✓✓ Read"
+                : data.status === "delivered"
+                ? "✓✓ Delivered"
+                : "✓ Sent"}
             </span>
           )}
         </div>
