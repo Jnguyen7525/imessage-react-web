@@ -299,8 +299,11 @@ function Header() {
         ) : isSignup ? (
           <Link href="/">Signup</Link>
         ) : (
-          <Link href="/" className="hover:opacity-80">
-            Home
+          <Link
+            href="/"
+            className="hover:opacity-80 text-xl font-mono text-blue-300"
+          >
+            TIM<span className="text-white">_</span>
           </Link>
         )}
       </div>

@@ -812,6 +812,7 @@
 "use client";
 
 import Header from "@/app/components/Header";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -845,8 +846,14 @@ export default function HomePage() {
 
         {/* Hero Image Placeholder */}
         <div className="mt-12">
-          <div className="w-[600px] h-[350px] bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
-            [Insert Video Call UI Screenshot or Animation]
+          <div className="mt-12 relative w-[600px] h-[350px] rounded-lg overflow-hidden bg-gray-800">
+            <Image
+              src="/livekit-meet.jpg"
+              alt="Video call UI"
+              fill
+              className="object-cover"
+              priority
+            />
           </div>
         </div>
       </section>
@@ -1017,8 +1024,8 @@ export default function HomePage() {
       {/* ✅ Footer */}
       <footer className="bg-zinc-900 text-gray-400 text-sm text-center py-6 border-t border-zinc-800">
         <p>
-          © {new Date().getFullYear()} YourAppName. Built for modern teams,
-          remote work, and real-time collaboration.
+          © {new Date().getFullYear()} TIM. Built for modern teams, remote work,
+          and real-time collaboration.
         </p>
         <p className="mt-2">Video • Audio • Messaging • Secure • Scalable</p>
       </footer>
