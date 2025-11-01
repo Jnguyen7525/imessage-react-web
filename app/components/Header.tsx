@@ -309,7 +309,7 @@ function Header() {
       </div>
 
       {/* 🔍 Search Bar */}
-      {isInbox && (
+      {!isInbox && (
         <div className="border-1 bg-slate-900 border-slate-600 h-fit w-fit rounded-full flex-1 mx-4">
           <input
             className="px-4 py-1 w-full rounded-full"
@@ -333,6 +333,7 @@ function Header() {
             />
           </>
         )} */}
+        <Ellipsis className="cursor-pointer hover:opacity-50" />
         {user ? (
           <div
             className="flex items-center gap-2 cursor-pointer hover:opacity-80"

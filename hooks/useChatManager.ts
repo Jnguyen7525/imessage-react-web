@@ -8,7 +8,7 @@ export function useChatManager(
   const handleSelectContact = async (contact: {
     id: string;
     name: string;
-    avatar: string;
+    avatar?: string; // ← make it optional
   }) => {
     const chat_id = await findOrCreateChat(contact.id);
     if (!chat_id) return;

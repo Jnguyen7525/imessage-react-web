@@ -39,7 +39,7 @@ function ChatTopBar() {
     user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture;
 
   const pathname = usePathname();
-  const isInbox = pathname === "/";
+  const isInbox = pathname === "/inbox";
   const isLogin = pathname === "/login";
   const isSignup = pathname === "/signup";
 
@@ -212,64 +212,51 @@ function ChatTopBar() {
 
   return (
     <div className="bg-gradient-to-t from-slate-800 to-slate-950 w-full h-fit px-5 py-3 gap-12 flex text-white items-center border-b border-zinc-800 justify-between">
-      <div>
-        {isLogin ? (
-          <Link href="/">Login</Link>
-        ) : isSignup ? (
-          <Link href="/">Signup</Link>
-        ) : selectedConversation ? (
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            {selectedConversation.contact.avatar ? (
-              <Image
-                className="w-12 h-12 rounded-full"
-                src={selectedConversation.contact.avatar}
-                alt=""
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
-                {selectedConversation.contact.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <span>{selectedConversation.contact.name}</span>
-          </Link>
+      <div className="flex items-center justify-center gap-2">
+        {selectedConversation && selectedConversation.contact.avatar ? (
+          <Image
+            className="w-12 h-12 rounded-full"
+            src={selectedConversation.contact.avatar}
+            alt=""
+          />
         ) : (
-          <Link href="/" className="hover:opacity-80">
-            Messages
-          </Link>
+          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
+            {selectedConversation &&
+              selectedConversation.contact.name.charAt(0).toUpperCase()}
+          </div>
         )}
+        <span>{selectedConversation && selectedConversation.contact.name}</span>
       </div>
 
       {/* 🔍 Search Bar */}
-      {!isInbox && (
-        <div className="border-1 bg-slate-900 border-slate-600 h-fit w-fit rounded-full flex-1 mx-4">
-          <input
-            className="px-4 py-1 w-full rounded-full"
-            placeholder="Search This Chat..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-        </div>
-      )}
+
+      <div className="border-1 bg-slate-900 border-slate-600 h-fit w-fit rounded-full flex-1 mx-4">
+        <input
+          className="px-4 py-1 w-full rounded-full"
+          placeholder="Search This Chat..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+
       {/* 📞 Call Controls */}
       <div className="flex gap-4 text-white relative">
-        {!isInbox && selectedConversation && (
-          <>
-            <Smartphone
-              className={`${
-                showPhone ? " scale-125 text-blue-500" : "opacity-100"
-              } cursor-pointer hover:opacity-50`}
-              onClick={() => setShowPhone(!showPhone)}
-            />
-            <Phone
-              className="cursor-pointer hover:opacity-50"
-              onClick={startAudioCall}
-            />
-            <Video
-              className="cursor-pointer hover:opacity-50"
-              onClick={startMeeting}
-            />
-          </>
-        )}
+        <>
+          <Smartphone
+            className={`${
+              showPhone ? " scale-125 text-blue-500" : "opacity-100"
+            } cursor-pointer hover:opacity-50`}
+            onClick={() => setShowPhone(!showPhone)}
+          />
+          <Phone
+            className="cursor-pointer hover:opacity-50"
+            onClick={startAudioCall}
+          />
+          <Video
+            className="cursor-pointer hover:opacity-50"
+            onClick={startMeeting}
+          />
+        </>
 
         <Ellipsis
           className="cursor-pointer hover:opacity-50"

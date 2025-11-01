@@ -9,7 +9,7 @@ export type ChatContext = {
 type Contact = {
   id: string;
   name: string;
-  avatar: string;
+  avatar?: string;
 };
 
 type Conversation = {
