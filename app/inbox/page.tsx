@@ -4,8 +4,10 @@ import Header from "@/app/components/Header";
 import {
   AudioLines,
   Building,
+  CalendarDays,
   ChevronLeft,
   LoaderCircle,
+  MessageCircle,
   Plus,
   Send,
   Settings,
@@ -34,6 +36,7 @@ import TypingDots from "../components/TypingDots";
 import { ConversationMessage } from "../components/ConversationMessage";
 import ChatTopBar from "../components/ChatTopBar";
 import Phone from "../components/Phone";
+import dayjs from "dayjs";
 
 export default function Home() {
   const { loading, error, user } = useUser();
@@ -53,7 +56,7 @@ export default function Home() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const [activePanel, setActivePanel] = useState<
-    "contacts" | "workspaces" | "settings"
+    "contacts" | "workspaces" | "settings" | "calendar"
   >("contacts");
   const [collapsed, setCollapsed] = useState(false);
   // const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -212,8 +215,10 @@ export default function Home() {
           </div>
 
           {/* Conversation Thread */}
-          <div className="flex-1 flex flex-col justify-between bg-gradient-to-t from-slate-800 to-slate-950 text-white ">
-            {selectedConversation ? (
+          <div className="flex-1 flex flex-col justify-start bg-gradient-to-t from-slate-800 to-slate-950 text-white ">
+            {activePanel === "calendar" ? (
+              <CalendarView />
+            ) : selectedConversation ? (
               <>
                 <ChatTopBar />
                 <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide gap-2 p-10">
@@ -235,6 +240,7 @@ export default function Home() {
                   <div ref={bottomRef} />
                 </div>
 
+                {/* conversation */}
                 <div className="flex flex-col w-full p-5">
                   {typingIndicator && <TypingDots />}
 
@@ -292,12 +298,21 @@ export default function Home() {
   );
 }
 
+type PanelType = "contacts" | "workspaces" | "settings" | "calendar";
+
+interface NavigationRailProps {
+  activePanel: PanelType;
+  setActivePanel: (panel: PanelType) => void;
+  collapsed: boolean;
+  toggleCollapsed: () => void;
+}
+
 function NavigationRail({
   activePanel,
   setActivePanel,
   collapsed,
   toggleCollapsed,
-}) {
+}: NavigationRailProps) {
   return (
     <div
       className={`bg-zinc-900 text-white flex flex-col items-center py-4 space-y-6 ${
@@ -305,16 +320,40 @@ function NavigationRail({
       } transition-all`}
     >
       <button onClick={() => setActivePanel("contacts")}>
-        <User
+        <MessageCircle
           className={`size-6 ${
             activePanel === "contacts" ? "text-blue-400" : "text-gray-400"
           }`}
         />
       </button>
       <button onClick={() => setActivePanel("workspaces")}>
-        <Building
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 32 32"
+          stroke={activePanel === "workspaces" ? "#60A5FA" : "#9CA3AF"} // Tailwind: blue-400 or gray-400
+          fill="none"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="w-7 h-7"
+        >
+          {/* Center user */}
+          <circle cx="16" cy="10" r="4" />
+          <path d="M10 22c0-3 3-5 6-5s6 2 6 5" />
+
+          {/* Left user */}
+          <circle cx="6" cy="12" r="3" />
+          <path d="M2 22c0-2 2-4 4-4" />
+
+          {/* Right user */}
+          <circle cx="26" cy="12" r="3" />
+          <path d="M30 22c0-2-2-4-4-4" />
+        </svg>
+      </button>
+      <button onClick={() => setActivePanel("calendar")}>
+        <CalendarDays
           className={`size-6 ${
-            activePanel === "workspaces" ? "text-blue-400" : "text-gray-400"
+            activePanel === "calendar" ? "text-blue-400" : "text-gray-400"
           }`}
         />
       </button>
@@ -332,7 +371,28 @@ function NavigationRail({
   );
 }
 
-function ContactsPanel({ contacts, unreadCounts, handleSelectContact }) {
+interface Contact {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+interface ContactEntry {
+  contact: Contact;
+  chat_id: string;
+}
+
+interface ContactsPanelProps {
+  contacts: ContactEntry[];
+  unreadCounts: Record<string, number>;
+  handleSelectContact: (contact: Contact) => void;
+}
+
+function ContactsPanel({
+  contacts,
+  unreadCounts,
+  handleSelectContact,
+}: ContactsPanelProps) {
   return (
     <div className="w-[350px] bg-slate-950 text-white flex flex-col border-r border-slate-600 gap-5">
       <div className="flex-1 overflow-y-auto scrollbar-hide mt-5 gap-5 flex flex-col">
@@ -368,11 +428,22 @@ function ContactsPanel({ contacts, unreadCounts, handleSelectContact }) {
   );
 }
 
+interface Workspace {
+  id: string;
+  name: string;
+}
+
+interface WorkspacePanelProps {
+  workspaces: Workspace[];
+  selectedWorkspace: Workspace | null;
+  setSelectedWorkspace: (workspace: Workspace) => void;
+}
+
 function WorkspacePanel({
   workspaces,
   selectedWorkspace,
   setSelectedWorkspace,
-}) {
+}: WorkspacePanelProps) {
   return (
     <div className="w-[350px] bg-slate-950 text-white flex flex-col border-r border-slate-600 p-4 gap-4">
       <h2 className="text-lg font-semibold">Workspaces</h2>
@@ -394,6 +465,117 @@ function WorkspacePanel({
       <button className="mt-4 text-sm text-blue-400 hover:underline">
         + Create Workspace
       </button>
+    </div>
+  );
+}
+
+function CalendarView() {
+  const [viewMode, setViewMode] = useState<"week" | "month">("week");
+  const [startDate, setStartDate] = useState(dayjs());
+
+  // Start of the week (Sunday)
+  const startOfWeek = startDate.startOf("week");
+  const days = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, "day"));
+
+  // Generate time slots from 12am to 11pm
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    dayjs().hour(i).format("ha")
+  );
+
+  const handlePrev = () => {
+    setStartDate((prev) =>
+      viewMode === "week" ? prev.subtract(7, "day") : prev.subtract(1, "month")
+    );
+  };
+
+  const handleNext = () => {
+    setStartDate((prev) =>
+      viewMode === "week" ? prev.add(7, "day") : prev.add(1, "month")
+    );
+  };
+
+  return (
+    <div className="flex flex-col flex-1 h-full w-full bg-slate-950 text-white">
+      {/* Month Header */}
+      <div className="text-center text-xl font-semibold py-4">
+        {startDate.format("MMMM YYYY")}
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-700 bg-slate-900">
+        <div className="flex gap-2">
+          <button
+            onClick={handlePrev}
+            className="px-3 py-1 text-sm bg-slate-800 rounded hover:bg-slate-700"
+          >
+            ← Prev
+          </button>
+          <button
+            onClick={handleNext}
+            className="px-3 py-1 text-sm bg-slate-800 rounded hover:bg-slate-700"
+          >
+            Next →
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode("week")}
+            className={`px-3 py-1 text-sm rounded ${
+              viewMode === "week" ? "bg-blue-500" : "bg-slate-800"
+            }`}
+          >
+            Week
+          </button>
+          <button
+            onClick={() => setViewMode("month")}
+            className={`px-3 py-1 text-sm rounded ${
+              viewMode === "month" ? "bg-blue-500" : "bg-slate-800"
+            }`}
+          >
+            Month
+          </button>
+        </div>
+      </div>
+
+      {/* Header: Days of Week */}
+      <div className="grid grid-cols-[80px_repeat(7,minmax(0,1fr))] border-b border-slate-700">
+        <div className="bg-slate-900 p-2 text-sm font-semibold flex items-center justify-center">
+          Time
+        </div>
+        {days.map((day) => (
+          <div
+            key={day.format("YYYY-MM-DD")}
+            className="p-2 text-sm font-semibold text-center"
+          >
+            {day.format("ddd DD")}
+          </div>
+        ))}
+      </div>
+
+      {/* Body: Time Rows */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {hours.map((hour) => (
+          <div
+            key={hour}
+            className="grid grid-cols-[80px_repeat(7,minmax(0,1fr))] border-b border-slate-700 h-16"
+          >
+            <div className="flex items-center justify-center text-xs text-gray-400 bg-slate-900">
+              {hour}
+            </div>
+            {days.map((day) => (
+              <div
+                key={`${day.format("YYYY-MM-DD")}-${hour}`}
+                className="border-l border-slate-800 hover:bg-slate-800 cursor-pointer p-1 flex"
+              >
+                <textarea
+                  placeholder=""
+                  className="w-full h-full resize-none bg-transparent text-white text-xs outline-none"
+                />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

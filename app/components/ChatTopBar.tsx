@@ -240,7 +240,7 @@ function ChatTopBar() {
       </div>
 
       {/* 🔍 Search Bar */}
-      {isInbox && (
+      {!isInbox && (
         <div className="border-1 bg-slate-900 border-slate-600 h-fit w-fit rounded-full flex-1 mx-4">
           <input
             className="px-4 py-1 w-full rounded-full"
@@ -252,7 +252,7 @@ function ChatTopBar() {
       )}
       {/* 📞 Call Controls */}
       <div className="flex gap-4 text-white relative">
-        {isInbox && selectedConversation && (
+        {!isInbox && selectedConversation && (
           <>
             <Smartphone
               className={`${
